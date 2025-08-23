@@ -1,8 +1,4 @@
-import { useCreateDespesa } from "@/src/hooks/useCreateDespesa";
-import api from "@/src/utils/api";
-import { getUser } from "@/src/utils/auth";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -14,132 +10,53 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
-
-interface Categoria {
-  id: string;
-  name: string;
-}
-
-interface Conta {
-  id: string;
-  nome: string;
-  saldo: number;
-  type?: string;
-  efetivo?: boolean;
-  cartoes?: { id: string; nome: string }[];
-}
+import DateTimePicker from "@react-native-community/datetimepicker";
+import api from "@/src/utils/api";
+import { getUser } from "@/src/utils/auth";
+import { Feather } from "@expo/vector-icons";
 
 interface Props {
-  contaId?: string;
-  cartaoId?: string;
   onClose?: () => void;
   onSubmit?: (data: any) => Promise<void>;
   loading?: boolean;
 }
 
 export default function CreateDespesaForm({
-  contaId,
-  cartaoId,
   onClose,
   onSubmit,
   loading,
 }: Props) {
-  const {
-    createDespesa,
-    loading: loadingHook,
-    error,
-    success,
-  } = useCreateDespesa();
-
-  // Estados
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [categoryId, setCategoryId] = useState("");
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
-  const [metodoPagamento, setMetodoPagamento] = useState<
-    "PIX" | "CREDITO" | "DEBITO" | "DINHEIRO"
-  >("PIX");
   const [parcelas, setParcelas] = useState("1");
+  const [metodoPagamento, setMetodoPagamento] = useState("PIX");
+  const [contaSelecionada, setContaSelecionada] = useState("");
+  const [cartaoSelecionado, setCartaoSelecionado] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // --- Contas e Cartões ---
-  const [contas, setContas] = useState<Conta[]>([]);
-  const [contaSelecionada, setContaSelecionada] = useState(contaId || "");
-  const [cartaoSelecionado, setCartaoSelecionado] = useState(cartaoId || "");
-
-  // Dropdown Conta
-  const [openConta, setOpenConta] = useState(false);
-  const [itemsConta, setItemsConta] = useState<
-    { label: string; value: string }[]
-  >([]);
-
-  // Dropdown Cartão
-  const [openCartao, setOpenCartao] = useState(false);
-  const [itemsCartao, setItemsCartao] = useState<
-    { label: string; value: string }[]
-  >([]);
-
-  // Dropdown Categoria
-  const [openCategoria, setOpenCategoria] = useState(false);
-  const [itemsCategoria, setItemsCategoria] = useState<
-    { label: string; value: string }[]
-  >([]);
-
-  // Dropdown Método
-  const [openMetodo, setOpenMetodo] = useState(false);
-  const [itemsMetodo] = useState([
-    { label: "PIX", value: "PIX" },
-    { label: "Cartão de Crédito", value: "CREDITO" },
-    { label: "Cartão de Débito", value: "DEBITO" },
-    { label: "Dinheiro", value: "DINHEIRO" },
-  ]);
-  const contaAtual = contas.find((c) => c.id === contaSelecionada);
-  const isEfetivo = contaAtual?.type === "EFETIVO" && contaAtual?.efetivo;
-
-  // Efecto para mostrar mensaje de éxito
-  useEffect(() => {
-    if (success) {
-      Alert.alert("Sucesso!", "Despesa criada com sucesso!", [
-        {
-          text: "OK",
-          onPress: () => {
-            onClose?.();
-          },
-        },
-      ]);
-    }
-  }, [success, onClose]);
-
-  // Efecto para mostrar erro
-  useEffect(() => {
-    if (error) {
-      Alert.alert("Erro", error.toString());
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (isEfetivo) {
-      setMetodoPagamento("DINHEIRO");
-      setCartaoSelecionado(""); // garante que não vai mandar cartão
-    }
-  }, [isEfetivo]);
-
-  // Buscar categorias
+  const [categorias, setCategorias] = useState<{ id: string; name: string }[]>(
+    []
+  );
+  const [contas, setContas] = useState<any[]>([]);
+  const [cartoes, setCartoes] = useState<any[]>([]);
+  const [searchCategoria, setSearchCategoria] = useState("");
+  const categoriasFiltradas = categorias.filter((cat) =>
+    cat.name.toLowerCase().includes(searchCategoria.toLowerCase())
+  );
+  const [searchConta, setSearchConta] = useState("");
+  const contasFiltradas = contas.filter((c) =>
+    `${c.bancoNome} - ${c.conta}`
+      .toLowerCase()
+      .includes(searchConta.toLowerCase())
+  );
+  // Carregar categorias
   useEffect(() => {
     async function fetchCategorias() {
       try {
         const res = await api.get("/categorias");
-        if (res.data.success) {
-          setCategorias(res.data.data);
-          setItemsCategoria(
-            res.data.data.map((c: Categoria) => ({
-              label: c.name,
-              value: c.id,
-            }))
-          );
-        }
+        if (res.data.success) setCategorias(res.data.data);
       } catch {
         Alert.alert("Erro", "Não foi possível carregar as categorias");
       }
@@ -147,29 +64,14 @@ export default function CreateDespesaForm({
     fetchCategorias();
   }, []);
 
-  // Buscar contas do usuário
+  // Carregar contas do usuário
   useEffect(() => {
     async function fetchContas() {
       const user = await getUser();
       if (!user?.id) return;
-
       try {
         const res = await api.get(`/contas/user/${user.id}`);
-        if (res.data.success) {
-          const contasData: Conta[] = res.data.data.map((c: any) => ({
-            id: c.id,
-            nome: `${c.bancoNome} - ${c.conta}`,
-            saldo: parseFloat(c.saldo),
-            type: c.type,
-            efetivo: c.efetivo,
-            cartoes: c.cartoes || [],
-          }));
-
-          setContas(contasData);
-          setItemsConta(
-            contasData.map((c) => ({ label: c.nome, value: c.id }))
-          );
-        }
+        if (res.data.success) setContas(res.data.data);
       } catch {
         Alert.alert("Erro", "Não foi possível carregar as contas");
       }
@@ -177,36 +79,19 @@ export default function CreateDespesaForm({
     fetchContas();
   }, []);
 
-  // Quando muda a conta, carregar os cartões vinculados
+  // Atualizar cartões quando a conta muda
   useEffect(() => {
     const conta = contas.find((c) => c.id === contaSelecionada);
-    if (conta && conta.cartoes) {
-      setItemsCartao(
-        conta.cartoes.map((cartao) => ({
-          label: cartao.nome,
-          value: cartao.id,
-        }))
-      );
-    } else {
-      setItemsCartao([]);
-      setCartaoSelecionado("");
-    }
+    if (conta?.cartoes) setCartoes(conta.cartoes);
+    else setCartoes([]);
+    setCartaoSelecionado("");
   }, [contaSelecionada]);
 
-  // Criar despesa
   const handleSubmit = async () => {
     const user = await getUser();
     if (!user?.id) return alert("Usuário não encontrado!");
-
-    if (!categoryId || !descricao || !valor || !contaSelecionada) {
+    if (!descricao || !valor || !contaSelecionada || !categoryId)
       return Alert.alert("Atenção", "Preencha todos os campos obrigatórios!");
-    }
-
-    const formattedDate = date.toISOString().split("T")[0];
-    const isCredito = metodoPagamento === "CREDITO";
-    const numParcelas = isCredito
-      ? Math.max(1, Math.min(24, Number(parcelas)))
-      : 1;
 
     const payload = {
       userId: user.id,
@@ -216,203 +101,241 @@ export default function CreateDespesaForm({
       descricao,
       valor: Number(valor),
       metodoPagamento,
-      data: formattedDate,
-      ...(isCredito && { parcelado: true, numeroParcelas: numParcelas }),
+      data: date.toISOString().split("T")[0],
+      ...(metodoPagamento === "CREDITO" && {
+        parcelado: true,
+        numeroParcelas: Number(parcelas),
+      }),
     };
 
     try {
-      if (onSubmit) {
-        await onSubmit(payload);
-        Alert.alert("Sucesso!", "Despesa criada com sucesso!", [
-          {
-            text: "OK",
-            onPress: () => {
-              onClose?.();
-            },
-          },
-        ]);
-      } else {
-        await createDespesa(payload as any);
-      }
-    } catch (err) {
+      if (onSubmit) await onSubmit(payload);
+      else await api.post("/despesas", payload);
+      Alert.alert("Sucesso!", "Despesa criada com sucesso!", [
+        { text: "OK", onPress: onClose },
+      ]);
+    } catch {
       Alert.alert("Erro", "Não foi possível criar a despesa. Tente novamente.");
     }
   };
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      {/* Header com botão de fechar */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Nova Despesa</Text>
+  style={{ flex: 1 }}
+  behavior={Platform.OS === "ios" ? "padding" : "height"}
+>
+  <ScrollView contentContainerStyle={styles.container}>
+    {/* Header fixo no topo */}
+    <View style={styles.header}>
+      <Text style={styles.title}>Nova Despesa</Text>
+      {onClose && (
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Text style={styles.closeButtonText}>✕</Text>
         </TouchableOpacity>
-      </View>
+      )}
+    </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Selecionar Conta */}
-        <View
-          style={[styles.formGroup, openConta && styles.dropdownOpenContainer]}
-        >
-          <Text style={styles.label}>Conta *</Text>
-          <DropDownPicker
-            open={openConta}
-            value={contaSelecionada}
-            items={itemsConta}
-            setOpen={setOpenConta}
-            setValue={setContaSelecionada as any}
-            setItems={setItemsConta}
-            placeholder="Selecione a conta"
-            style={styles.dropdown}
-            dropDownContainerStyle={[
-              styles.dropdownContainer,
-              openConta && { zIndex: 10000 as any },
-            ]}
-            zIndex={openConta ? 10000 : 3000}
-          />
-        </View>
-
-        {/* Selecionar Cartão */}
-        {!isEfetivo && (
-
-          <View
-          style={[styles.formGroup, openCartao && styles.dropdownOpenContainer]}
-          >
-          <Text style={styles.label}>Cartão</Text>
-          <DropDownPicker
-            open={openCartao}
-            value={cartaoSelecionado}
-            items={itemsCartao}
-            setOpen={setOpenCartao}
-            setValue={setCartaoSelecionado as any}
-            setItems={setItemsCartao}
-            placeholder="Selecione um cartão (opcional)"
-            style={styles.dropdown}
-            dropDownContainerStyle={[
-              styles.dropdownContainer,
-              openCartao && { zIndex: 9000 as any },
-            ]}
-            zIndex={openCartao ? 9000 : 2000}
-            disabled={itemsCartao.length === 0}
-            />
-        </View>
-          )}
-
-        {/* Categoria */}
-        <View
+    {/* Conta */}
+    <Text style={styles.label}>Conta *</Text>
+    <View style={styles.searchContainer}>
+      <Feather
+        name="search"
+        size={20}
+        color="#999"
+        style={{ marginRight: 8 }}
+      />
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Buscar conta"
+        value={searchConta}
+        onChangeText={setSearchConta}
+      />
+    </View>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+      {contasFiltradas.map((c) => (
+        <TouchableOpacity
+          key={c.id}
           style={[
-            styles.formGroup,
-            openCategoria && styles.dropdownOpenContainer,
+            styles.selectButton,
+            contaSelecionada === c.id && styles.selectButtonActive,
           ]}
+          onPress={() => setContaSelecionada(c.id)}
         >
-          <Text style={styles.label}>Categoria *</Text>
-          <DropDownPicker
-            open={openCategoria}
-            value={categoryId}
-            items={itemsCategoria}
-            setOpen={setOpenCategoria}
-            setValue={setCategoryId as any}
-            setItems={setItemsCategoria}
-            placeholder="Selecione uma categoria"
-            style={styles.dropdown}
-            dropDownContainerStyle={[
-              styles.dropdownContainer,
-              openCategoria && { zIndex: 8000 as any },
+          <Text
+            style={[
+              styles.selectButtonText,
+              contaSelecionada === c.id && styles.selectButtonTextActive,
             ]}
-            zIndex={openCategoria ? 8000 : 1000}
-          />
-        </View>
+          >
+            {c.bancoNome} - {c.conta}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
 
-        {/* Descrição */}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Descrição *</Text>
-          <TextInput
-            style={styles.input}
-            value={descricao}
-            onChangeText={setDescricao}
-            placeholder="Digite a descrição da despesa"
-          />
-        </View>
-
-        {/* Valor */}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Valor *</Text>
-          <TextInput
-            style={styles.input}
-            value={valor}
-            onChangeText={setValor}
-            keyboardType="numeric"
-            placeholder="Digite o valor"
-          />
-        </View>
-
-        {/* Método de Pagamento */}
-        {/* Método de Pagamento */}
-        {/* Método de Pagamento */}
-        {!isEfetivo && (
-          <DropDownPicker
-            open={openMetodo}
-            value={metodoPagamento}
-            items={itemsMetodo}
-            setOpen={setOpenMetodo}
-            setValue={setMetodoPagamento as any}
-            onChangeValue={(v) => {
-              if (v === "CREDITO") setParcelas("1");
-            }}
-            placeholder="Selecione o método"
-            style={styles.dropdown}
-            dropDownContainerStyle={[
-              styles.dropdownContainer,
-              openMetodo && { zIndex: 7000 as any },
-            ]}
-            zIndex={openMetodo ? 7000 : 900}
-          />
+        {/* Cartão */}
+        {cartoes.length > 0 && (
+          <>
+            <Text style={styles.label}>Cartão (opcional)</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.horizontalScroll}
+            >
+              {cartoes.map((card) => (
+                <TouchableOpacity
+                  key={card.id}
+                  style={[
+                    styles.selectButton,
+                    cartaoSelecionado === card.id && styles.selectButtonActive,
+                  ]}
+                  onPress={() => setCartaoSelecionado(card.id)}
+                >
+                  <Text
+                    style={[
+                      styles.selectButtonText,
+                      cartaoSelecionado === card.id &&
+                        styles.selectButtonTextActive,
+                    ]}
+                  >
+                    {card.nome}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
         )}
 
-        {/* Campo Parcelas - só aparece se for Crédito */}
+        {/* Categoria */}
+        <Text style={styles.label}>Categoria *</Text>
+        <View style={styles.searchContainer}>
+          <Feather
+            name="search"
+            size={20}
+            color="#999"
+            style={{ marginRight: 8 }}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar categoria"
+            value={searchCategoria}
+            onChangeText={setSearchCategoria}
+          />
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.horizontalScroll}
+        >
+          {categoriasFiltradas.map((cat) => (
+            <TouchableOpacity
+              key={cat.id}
+              style={[
+                styles.selectButton,
+                categoryId === cat.id && styles.selectButtonActive,
+              ]}
+              onPress={() => setCategoryId(cat.id)}
+            >
+              <Text
+                style={[
+                  styles.selectButtonText,
+                  categoryId === cat.id && styles.selectButtonTextActive,
+                ]}
+              >
+                {cat.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Descrição */}
+        <Text style={styles.label}>Descrição *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Descrição da despesa"
+          value={descricao}
+          onChangeText={setDescricao}
+        />
+
+        {/* Valor */}
+        <Text style={styles.label}>Valor *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Valor"
+          keyboardType="numeric"
+          value={valor}
+          onChangeText={setValor}
+        />
+
+        {/* Método de Pagamento */}
+        <Text style={styles.label}>Método de Pagamento *</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.horizontalScroll}
+        >
+          {["PIX", "DEBITO", "CREDITO", "DINHEIRO"].map((metodo) => (
+            <TouchableOpacity
+              key={metodo}
+              style={[
+                styles.selectButton,
+                metodoPagamento === metodo && styles.selectButtonActive,
+              ]}
+              onPress={() => setMetodoPagamento(metodo)}
+            >
+              <Text
+                style={[
+                  styles.selectButtonText,
+                  metodoPagamento === metodo && styles.selectButtonTextActive,
+                ]}
+              >
+                {metodo}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Parcelas */}
         {metodoPagamento === "CREDITO" && (
-          <View style={styles.formGroup}>
+          <>
             <Text style={styles.label}>Parcelas *</Text>
             <TextInput
               style={styles.input}
+              placeholder="Número de parcelas"
+              keyboardType="numeric"
               value={parcelas}
               onChangeText={setParcelas}
-              keyboardType="numeric"
-              placeholder="Número de parcelas"
             />
-          </View>
+          </>
         )}
 
         {/* Data */}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Data</Text>
-          <TouchableOpacity
-            style={styles.dateButton}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={styles.dateText}>
-              {date.toLocaleDateString("pt-BR")}
-            </Text>
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={(_, selectedDate) => {
-                setShowDatePicker(Platform.OS === "ios");
-                if (selectedDate) setDate(selectedDate);
-              }}
-            />
-          )}
-        </View>
+        <Text style={styles.label}>Data</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateText}>
+            {date.toLocaleDateString("pt-BR")}
+          </Text>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(_, selectedDate) => {
+              setShowDatePicker(Platform.OS === "ios");
+              if (selectedDate) setDate(selectedDate);
+            }}
+          />
+        )}
 
+        {/* Submit */}
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>
-            {loading ?? loadingHook ? "Criando..." : "Criar Despesa"}
+            {loading ? "Criando..." : "Criar Despesa"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -421,52 +344,41 @@ export default function CreateDespesaForm({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
+  container: { padding: 20, paddingBottom: 40, backgroundColor: "#fff" },
   title: {
     fontSize: 24,
     fontWeight: "700",
+    marginBottom: 20,
     color: "#1a1a1a",
   },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#f0f0f0",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  closeButtonText: {
-    fontSize: 18,
-    color: "#666",
-    fontWeight: "600",
-  },
-  scrollContent: { padding: 20, paddingBottom: 40 },
-  formGroup: { marginBottom: 20, zIndex: 1 },
-  label: { fontSize: 16, fontWeight: "600", marginBottom: 8, color: "#333" },
+  label: { fontSize: 16, fontWeight: "600", marginVertical: 10, color: "#333" },
   input: {
-    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
+    backgroundColor: "#fafafa",
+  },
+  horizontalScroll: { marginBottom: 10 },
+  selectButton: {
     borderWidth: 1,
     borderColor: "#ddd",
-    color: "#333",
-  },
-  dateButton: {
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginRight: 10,
     backgroundColor: "#fff",
+  },
+  selectButtonActive: { backgroundColor: "#1a73e8", borderColor: "#1a73e8" },
+  selectButtonText: { color: "#333", fontWeight: "500" },
+  selectButtonTextActive: { color: "#fff" },
+  dateButton: {
+    borderWidth: 1,
+    borderColor: "#ddd",
     borderRadius: 12,
     padding: 16,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    backgroundColor: "#fafafa",
   },
   dateText: { fontSize: 16, color: "#333" },
   submitButton: {
@@ -481,16 +393,36 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  dropdown: {
+  submitButtonText: { color: "#fff", fontSize: 17, fontWeight: "700" },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+    backgroundColor: "#fafafa",
   },
-  dropdownContainer: {
-    borderColor: "#ddd",
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
   },
-  dropdownOpenContainer: {
-    zIndex: 9999,
-    elevation: 9999,
-  },
-  submitButtonText: { color: "#fff", fontSize: 17, fontWeight: "700" },
+  header: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: 20,
+},
+closeButton: {
+  padding: 8,
+},
+closeButtonText: {
+  fontSize: 22,
+  fontWeight: "700",
+  color: "#333",
+},
+
 });

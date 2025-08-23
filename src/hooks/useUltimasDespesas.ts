@@ -9,6 +9,9 @@ interface Movimentacao {
   descricao: string;
   valor: number;
   data: string;
+  metodoPagamento: string;
+  conta?: { bancoNome: string };
+  categoria?: { name: string };
 }
 
 export function useUltimasDespesas() {
@@ -25,11 +28,15 @@ export function useUltimasDespesas() {
         if (res.data.success) {
           const data: Movimentacao[] = res.data.data.map((d: any) => ({
             id: d.id,
-            tipo: "Despesa", // esse endpoint é só despesas
+            tipo: "Despesa",
             descricao: d.descricao,
             valor: parseFloat(d.valor),
             data: d.data,
+            metodoPagamento: d.metodoPagamento,
+            conta: d.conta ? { bancoNome: d.conta.bancoNome } : undefined,
+            categoria: d.categoria ? { name: d.categoria.name } : undefined,
           }));
+
           setMovimentacoes(data);
         }
       } catch (e) {

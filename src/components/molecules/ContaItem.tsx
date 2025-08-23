@@ -1,14 +1,33 @@
-import { Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 
 export default function ContaItem({ nome, saldo }: { nome: string; saldo: number }) {
   return (
-    <Text style={styles.item}>
-      {nome}: <Text style={styles.valor}>R$ {saldo.toFixed(2)}</Text>
-    </Text>
+    <View style={styles.container}>
+      <Text style={styles.nome}>{nome}</Text>
+      <Text style={styles.saldo}>R$ {saldo.toFixed(2)}</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  item: { fontSize: 14, color: "#555", marginBottom: 3 },
-  valor: { fontWeight: "bold", color: "#007bff" },
+  container: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+  },
+  nome: {
+    fontSize: 14,
+    color: "#333",
+    flexShrink: 1, // evita overflow si el nombre es muy largo
+  },
+  saldo: {
+    fontWeight: "bold",
+    color: "#007bff",
+    textAlign: "right",
+    minWidth: 80, // para alinear todos los saldos
+  },
 });

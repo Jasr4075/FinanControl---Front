@@ -3,7 +3,7 @@ import axios from 'axios';
 import { getToken } from './auth';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api', // ajusta para sua API
+  baseURL: 'https://financontrol-ywel.onrender.com/api', // ajusta para sua API
   headers: {
     'Content-Type': 'application/json',
   },

@@ -5,7 +5,7 @@ import ActionButton from "../atoms/ActionButton";
 import CreateDespesaForm from "../molecules/CreateDespesaForm";
 import CreateReceitaForm from "../molecules/CreateReceitaForm";
 
-export default function ActionButtonsRow() {
+export default function ActionButtonsRow({ onUpdateData }: { onUpdateData: () => void }) {
   const [modalDespesaVisible, setModalDespesaVisible] = useState(false);
   const [modalReceitaVisible, setModalReceitaVisible] = useState(false);
   const { createDespesa, loading } = useCreateDespesa();
@@ -13,6 +13,17 @@ export default function ActionButtonsRow() {
   const handleCreateDespesa = async (data: any) => {
     await createDespesa(data);
     setModalDespesaVisible(false);
+  };
+
+  // Funções para fechar os modais e atualizar os dados
+  const closeReceitaModal = () => {
+    setModalReceitaVisible(false);
+    onUpdateData(); // Chama a função de atualização
+  };
+
+  const closeDespesaModal = () => {
+    setModalDespesaVisible(false);
+    onUpdateData(); // Chama a função de atualização
   };
 
   return (
@@ -29,12 +40,14 @@ export default function ActionButtonsRow() {
       />
 
       <Modal visible={modalReceitaVisible} animationType="slide">
-        <CreateReceitaForm onClose={() => setModalReceitaVisible(false)} />
+        {/* Passando a nova função de fechamento que inclui a atualização */}
+        <CreateReceitaForm onClose={closeReceitaModal} />
       </Modal>
 
       <Modal visible={modalDespesaVisible} animationType="slide">
+        {/* Passando a nova função de fechamento que inclui a atualização */}
         <CreateDespesaForm
-          onClose={() => setModalDespesaVisible(false)}
+          onClose={closeDespesaModal}
           onSubmit={handleCreateDespesa as any}
           loading={loading as any}
         />
