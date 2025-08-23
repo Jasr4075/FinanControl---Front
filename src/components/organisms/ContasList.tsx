@@ -115,11 +115,11 @@ export default function ContasList({ contas }: { contas: Conta[] }) {
           </View>
         </View>
       </Modal>
-      <ContaEditModal
-  conta={contaCompleta}
-  visible={!!selectedConta}
-  onClose={() => setSelectedConta(null)}
-/>
+      {/* <ContaEditModal
+        conta={contaCompleta}
+        visible={!!selectedConta}
+        onClose={() => setSelectedConta(null)}
+      /> */}
     </Card>
   );
 }
