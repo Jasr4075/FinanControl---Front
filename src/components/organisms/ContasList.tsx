@@ -13,8 +13,11 @@ import { Plus, Edit } from "lucide-react-native";
 import CreateContaForm from "../organisms/CreateContaForm";
 import ContaEditModal from "../molecules/ContaEditModal";
 import { Conta } from "../../types/types";
-
-export default function ContasList({ contas }: { contas: Conta[] }) {
+type ContasListProps = {
+  contas: Conta[];
+  scrollEnabled?: boolean; // adiciona aqui
+};
+export default function ContasList({ contas, scrollEnabled = true }: ContasListProps) {
   const [showForm, setShowForm] = useState(false);
   const [selectedConta, setSelectedConta] = useState<Conta | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -50,6 +53,7 @@ export default function ContasList({ contas }: { contas: Conta[] }) {
             <ContaItem nome={item.nome} saldo={item.saldo} />
           </TouchableOpacity>
         )}
+        scrollEnabled={scrollEnabled} // padrão true
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         contentContainerStyle={{ paddingVertical: 10 }}
       />

@@ -17,8 +17,11 @@ const ITEMS_PER_LOAD = 10;
 
 export default function MovimentacoesList({
   movimentacoes,
+  scrollEnabled = true,
 }: {
   movimentacoes: Movimentacao[];
+    scrollEnabled?: boolean;
+
 }) {
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [selected, setSelected] = useState<Movimentacao | null>(null);
@@ -35,6 +38,7 @@ export default function MovimentacoesList({
 
       <FlatList
         data={movimentacoes.slice(0, visibleCount)}
+        scrollEnabled={scrollEnabled}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -65,8 +69,11 @@ export default function MovimentacoesList({
               <Text style={styles.desc}>{item.descricao}</Text>
 
               <Text style={styles.meta}>
-                {item.categoria?.name ?? "Sem categoria"} •{" "}
-                {item.conta?.bancoNome ?? "Conta"} • {item.metodoPagamento}
+                {item.categoria ? item.categoria.name : "Sem categoria"}
+                {" • "}
+                {item.conta ? item.conta.bancoNome : "Sem conta"}
+                {" • "}
+                {item.metodoPagamento}
               </Text>
 
               <Text style={styles.date}>
@@ -84,6 +91,7 @@ export default function MovimentacoesList({
             </View>
           </TouchableOpacity>
         )}
+
       />
 
       {/* Botões Ver mais / Ocultar */}
@@ -102,34 +110,47 @@ export default function MovimentacoesList({
       )}
 
       {/* Modal de detalhes */}
-<Modal
-  visible={!!selected}
-  animationType="slide"
-  transparent={true}
-  onRequestClose={() => setSelected(null)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalCard}>
-      <Text style={styles.modalTitle}>{selected?.descricao}</Text>
-      <Text style={styles.meta}>Tipo: {selected?.tipo}</Text>
-      <Text style={styles.meta}>Valor: R$ {selected?.valor.toFixed(2)}</Text>
-      <Text style={styles.meta}>
-        Data: {selected?.data ? new Date(selected.data).toLocaleDateString("pt-BR") : ""}
-      </Text>
-      <Text style={styles.meta}>Método: {selected?.metodoPagamento}</Text>
-      <Text style={styles.meta}>Conta: {selected?.conta?.bancoNome ?? "Conta"}</Text>
-      <Text style={styles.meta}>Categoria: {selected?.categoria?.name ?? "Sem categoria"}</Text>
+      <Modal
+        visible={!!selected}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setSelected(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{selected?.descricao}</Text>
+            <Text style={styles.meta}>Tipo: {selected?.tipo}</Text>
+            <Text style={styles.meta}>
+              Valor: R$ {selected?.valor.toFixed(2)}
+            </Text>
+            <Text style={styles.meta}>
+              Data:{" "}
+              {selected?.data
+                ? new Date(selected.data).toLocaleDateString("pt-BR")
+                : ""}
+            </Text>
+            <Text style={styles.meta}>Método: {selected?.metodoPagamento}</Text>
+            <Text style={styles.meta}>
+              Conta: {selected?.conta?.bancoNome ?? "Conta"}
+            </Text>
+            <Text style={styles.meta}>
+              Categoria: {selected?.categoria?.name ?? "Sem categoria"}
+            </Text>
 
-      {selected?.cartao?.name && (
-        <Text style={styles.meta}>Cartão: {selected?.cartao?.name}</Text>
-      )}
+            {selected?.cartao?.name && (
+              <Text style={styles.meta}>Cartão: {selected?.cartao?.name}</Text>
+            )}
 
-      <TouchableOpacity onPress={() => setSelected(null)}>
-        <Text style={{ color: "red", marginTop: 20, textAlign: "center" }}>Fechar</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
+            <TouchableOpacity onPress={() => setSelected(null)}>
+              <Text
+                style={{ color: "red", marginTop: 20, textAlign: "center" }}
+              >
+                Fechar
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </Card>
   );
 }

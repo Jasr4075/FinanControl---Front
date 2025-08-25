@@ -1,11 +1,12 @@
 // src/utils/api.ts
-import axios from 'axios';
-import { getToken } from './auth';
+import axios from "axios";
+import { getToken, deleteToken } from "./auth";
+import { router } from "expo-router"; // pode usar direto aqui
 
 const api = axios.create({
-  baseURL: 'https://financontrol-ywel.onrender.com/api', // ajusta para sua API
+  baseURL: "https://financontrol-ywel.onrender.com/api", // ajusta para sua API
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -17,5 +18,17 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+// Interceptor para tratar erros globais
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      await deleteToken();
+      router.replace("/login"); // força redirecionar pro login
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

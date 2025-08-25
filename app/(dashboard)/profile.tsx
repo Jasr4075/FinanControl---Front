@@ -1,4 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from "react-native";
 import { useAuthUser } from "@/src/hooks";
 import { useRouter } from "expo-router";
 

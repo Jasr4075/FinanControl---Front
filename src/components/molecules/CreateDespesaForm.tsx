@@ -1,4 +1,8 @@
-import { useState, useEffect } from "react";
+import { useCreateDespesa } from "@/src/hooks/useCreateDespesa";
+import api from "@/src/utils/api";
+import { getUser } from "@/src/utils/auth";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -10,54 +14,107 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import api from "@/src/utils/api";
-import { getUser } from "@/src/utils/auth";
 import { Feather } from "@expo/vector-icons";
 
+interface Categoria {
+  type: "RECEITA" | "DESPESA";
+  id: string;
+  name: string;
+}
+
+interface Conta {
+  id: string;
+  nome: string;
+  saldo: number;
+  type?: string;
+  efetivo?: boolean;
+  cartoes?: { id: string; nome: string }[];
+}
+
 interface Props {
+  contaId?: string;
+  cartaoId?: string;
   onClose?: () => void;
   onSubmit?: (data: any) => Promise<void>;
   loading?: boolean;
 }
 
 export default function CreateDespesaForm({
+  contaId,
+  cartaoId,
   onClose,
   onSubmit,
   loading,
 }: Props) {
+  const {
+    createDespesa,
+    loading: loadingHook,
+    error,
+    success,
+  } = useCreateDespesa();
+
+  // Estados do formulário
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
   const [parcelas, setParcelas] = useState("1");
   const [metodoPagamento, setMetodoPagamento] = useState("PIX");
-  const [contaSelecionada, setContaSelecionada] = useState("");
-  const [cartaoSelecionado, setCartaoSelecionado] = useState("");
+  const [contaSelecionada, setContaSelecionada] = useState(contaId || "");
+  const [cartaoSelecionado, setCartaoSelecionado] = useState(cartaoId || "");
   const [categoryId, setCategoryId] = useState("");
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const [categorias, setCategorias] = useState<{ id: string; name: string }[]>(
-    []
-  );
-  const [contas, setContas] = useState<any[]>([]);
-  const [cartoes, setCartoes] = useState<any[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [contas, setContas] = useState<Conta[]>([]);
+  const [cartoes, setCartoes] = useState<{ id: string; nome: string }[]>([]);
   const [searchCategoria, setSearchCategoria] = useState("");
-  const categoriasFiltradas = categorias.filter((cat) =>
-    cat.name.toLowerCase().includes(searchCategoria.toLowerCase())
-  );
   const [searchConta, setSearchConta] = useState("");
+
+// dentro do seu componente
+// filtra só pelo search, já que categorias já é só DESPESA
+const categoriasFiltradas = categorias.filter((cat) =>
+  cat.name.toLowerCase().includes(searchCategoria.toLowerCase())
+);
+
+
   const contasFiltradas = contas.filter((c) =>
-    `${c.bancoNome} - ${c.conta}`
-      .toLowerCase()
-      .includes(searchConta.toLowerCase())
+    c.nome.toLowerCase().includes(searchConta.toLowerCase())
   );
+
+  const contaSelecionadaObj = contas.find((c) => c.id === contaSelecionada);
+  const isEfetivo =
+    contaSelecionadaObj?.type === "EFETIVO" && contaSelecionadaObj?.efetivo;
+
+  // Hooks de efeito
+  useEffect(() => {
+    if (success) {
+      Alert.alert("Sucesso!", "Despesa criada com sucesso!", [
+        { text: "OK", onPress: onClose },
+      ]);
+    }
+  }, [success, onClose]);
+
+  useEffect(() => {
+    if (error) Alert.alert("Erro", error.toString());
+  }, [error]);
+
+  useEffect(() => {
+    if (isEfetivo) {
+      setMetodoPagamento("DINHEIRO");
+      setCartaoSelecionado("");
+    }
+  }, [isEfetivo]);
+
   // Carregar categorias
   useEffect(() => {
     async function fetchCategorias() {
       try {
         const res = await api.get("/categorias");
-        if (res.data.success) setCategorias(res.data.data);
-      } catch {
+        // filtra apenas DESPESA
+        const despesas = res.data.data.filter((cat: any) => cat.type === "DESPESA");
+        setCategorias(despesas); // já seta direto
+      } catch (err) {
+        console.error(err);
         Alert.alert("Erro", "Não foi possível carregar as categorias");
       }
     }
@@ -71,7 +128,17 @@ export default function CreateDespesaForm({
       if (!user?.id) return;
       try {
         const res = await api.get(`/contas/user/${user.id}`);
-        if (res.data.success) setContas(res.data.data);
+        if (res.data.success) {
+          const contasData: Conta[] = res.data.data.map((c: any) => ({
+            id: c.id,
+            nome: `${c.bancoNome} - ${c.conta}`,
+            saldo: parseFloat(c.saldo),
+            type: c.type,
+            efetivo: c.efetivo,
+            cartoes: c.cartoes || [],
+          }));
+          setContas(contasData);
+        }
       } catch {
         Alert.alert("Erro", "Não foi possível carregar as contas");
       }
@@ -87,12 +154,14 @@ export default function CreateDespesaForm({
     setCartaoSelecionado("");
   }, [contaSelecionada]);
 
+  // Submit
   const handleSubmit = async () => {
     const user = await getUser();
     if (!user?.id) return alert("Usuário não encontrado!");
     if (!descricao || !valor || !contaSelecionada || !categoryId)
       return Alert.alert("Atenção", "Preencha todos os campos obrigatórios!");
 
+    const isCredito = metodoPagamento === "CREDITO";
     const payload = {
       userId: user.id,
       contaId: contaSelecionada,
@@ -102,15 +171,12 @@ export default function CreateDespesaForm({
       valor: Number(valor),
       metodoPagamento,
       data: date.toISOString().split("T")[0],
-      ...(metodoPagamento === "CREDITO" && {
-        parcelado: true,
-        numeroParcelas: Number(parcelas),
-      }),
+      ...(isCredito && { parcelado: true, numeroParcelas: Number(parcelas) }),
     };
 
     try {
       if (onSubmit) await onSubmit(payload);
-      else await api.post("/despesas", payload);
+      else await createDespesa(payload as any);
       Alert.alert("Sucesso!", "Despesa criada com sucesso!", [
         { text: "OK", onPress: onClose },
       ]);
@@ -119,62 +185,78 @@ export default function CreateDespesaForm({
     }
   };
 
+  // UI
   return (
     <KeyboardAvoidingView
-  style={{ flex: 1 }}
-  behavior={Platform.OS === "ios" ? "padding" : "height"}
->
-  <ScrollView contentContainerStyle={styles.container}>
-    {/* Header fixo no topo */}
-    <View style={styles.header}>
-      <Text style={styles.title}>Nova Despesa</Text>
-      {onClose && (
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Text style={styles.closeButtonText}>✕</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-
-    {/* Conta */}
-    <Text style={styles.label}>Conta *</Text>
-    <View style={styles.searchContainer}>
-      <Feather
-        name="search"
-        size={20}
-        color="#999"
-        style={{ marginRight: 8 }}
-      />
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Buscar conta"
-        value={searchConta}
-        onChangeText={setSearchConta}
-      />
-    </View>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-      {contasFiltradas.map((c) => (
-        <TouchableOpacity
-          key={c.id}
-          style={[
-            styles.selectButton,
-            contaSelecionada === c.id && styles.selectButtonActive,
-          ]}
-          onPress={() => setContaSelecionada(c.id)}
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+        {/* Header */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginBottom: 20,
+            alignItems: "center",
+          }}
         >
-          <Text
-            style={[
-              styles.selectButtonText,
-              contaSelecionada === c.id && styles.selectButtonTextActive,
-            ]}
-          >
-            {c.bancoNome} - {c.conta}
+          <Text style={{ fontSize: 24, fontWeight: "700", color: "#1a1a1a" }}>
+            Nova Despesa
           </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+          {onClose && (
+            <TouchableOpacity onPress={onClose} style={{ padding: 8 }}>
+              <Text style={{ fontSize: 22, fontWeight: "700", color: "#333" }}>
+                ✕
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Conta */}
+        <Text style={styles.label}>Conta *</Text>
+        <View style={styles.searchContainer}>
+          <Feather
+            name="search"
+            size={20}
+            color="#999"
+            style={{ marginRight: 8 }}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar conta"
+            value={searchConta}
+            onChangeText={setSearchConta}
+          />
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.horizontalScroll}
+        >
+          {contasFiltradas.map((c) => (
+            <TouchableOpacity
+              key={c.id}
+              style={[
+                styles.selectButton,
+                contaSelecionada === c.id && styles.selectButtonActive,
+              ]}
+              onPress={() => setContaSelecionada(c.id)}
+            >
+              <Text
+                style={[
+                  styles.selectButtonText,
+                  contaSelecionada === c.id && styles.selectButtonTextActive,
+                ]}
+              >
+                {c.nome}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
         {/* Cartão */}
-        {cartoes.length > 0 && (
+        {cartoes.length > 0 && !isEfetivo && (
           <>
             <Text style={styles.label}>Cartão (opcional)</Text>
             <ScrollView
@@ -207,47 +289,47 @@ export default function CreateDespesaForm({
         )}
 
         {/* Categoria */}
-        <Text style={styles.label}>Categoria *</Text>
-        <View style={styles.searchContainer}>
-          <Feather
-            name="search"
-            size={20}
-            color="#999"
-            style={{ marginRight: 8 }}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar categoria"
-            value={searchCategoria}
-            onChangeText={setSearchCategoria}
-          />
-        </View>
+<Text style={styles.label}>Categoria *</Text>
+<View style={styles.searchContainer}>
+  <Feather
+    name="search"
+    size={20}
+    color="#999"
+    style={{ marginRight: 8 }}
+  />
+  <TextInput
+    style={styles.searchInput}
+    placeholder="Buscar categoria"
+    value={searchCategoria}
+    onChangeText={setSearchCategoria}
+  />
+</View>
+<ScrollView
+  horizontal
+  showsHorizontalScrollIndicator={false}
+  style={styles.horizontalScroll}
+>
+  {categoriasFiltradas.map((cat) => (
+    <TouchableOpacity
+      key={cat.id}
+      style={[
+        styles.selectButton,
+        categoryId === cat.id && styles.selectButtonActive,
+      ]}
+      onPress={() => setCategoryId(cat.id)}
+    >
+      <Text
+        style={[
+          styles.selectButtonText,
+          categoryId === cat.id && styles.selectButtonTextActive,
+        ]}
+      >
+        {cat.name}
+      </Text>
+    </TouchableOpacity>
+  ))}
+</ScrollView>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.horizontalScroll}
-        >
-          {categoriasFiltradas.map((cat) => (
-            <TouchableOpacity
-              key={cat.id}
-              style={[
-                styles.selectButton,
-                categoryId === cat.id && styles.selectButtonActive,
-              ]}
-              onPress={() => setCategoryId(cat.id)}
-            >
-              <Text
-                style={[
-                  styles.selectButtonText,
-                  categoryId === cat.id && styles.selectButtonTextActive,
-                ]}
-              >
-                {cat.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
 
         {/* Descrição */}
         <Text style={styles.label}>Descrição *</Text>
@@ -269,32 +351,40 @@ export default function CreateDespesaForm({
         />
 
         {/* Método de Pagamento */}
-        <Text style={styles.label}>Método de Pagamento *</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.horizontalScroll}
-        >
-          {["PIX", "DEBITO", "CREDITO", "DINHEIRO"].map((metodo) => (
-            <TouchableOpacity
-              key={metodo}
-              style={[
-                styles.selectButton,
-                metodoPagamento === metodo && styles.selectButtonActive,
-              ]}
-              onPress={() => setMetodoPagamento(metodo)}
+        {!isEfetivo && (
+          <>
+            <Text style={styles.label}>Método de Pagamento *</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.horizontalScroll}
             >
-              <Text
-                style={[
-                  styles.selectButtonText,
-                  metodoPagamento === metodo && styles.selectButtonTextActive,
-                ]}
-              >
-                {metodo}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+              {["PIX", "DEBITO", "CREDITO", "DINHEIRO"].map((metodo) => (
+                <TouchableOpacity
+                  key={metodo}
+                  style={[
+                    styles.selectButton,
+                    metodoPagamento === metodo && styles.selectButtonActive,
+                  ]}
+                  onPress={() => {
+                    setMetodoPagamento(metodo);
+                    if (metodo !== "CREDITO") setParcelas("1");
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.selectButtonText,
+                      metodoPagamento === metodo &&
+                        styles.selectButtonTextActive,
+                    ]}
+                  >
+                    {metodo}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        )}
 
         {/* Parcelas */}
         {metodoPagamento === "CREDITO" && (
@@ -335,7 +425,7 @@ export default function CreateDespesaForm({
         {/* Submit */}
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>
-            {loading ? "Criando..." : "Criar Despesa"}
+            {loading ?? loadingHook ? "Criando..." : "Criar Despesa"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -344,13 +434,6 @@ export default function CreateDespesaForm({
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, paddingBottom: 40, backgroundColor: "#fff" },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 20,
-    color: "#1a1a1a",
-  },
   label: { fontSize: 16, fontWeight: "600", marginVertical: 10, color: "#333" },
   input: {
     borderWidth: 1,
@@ -405,24 +488,5 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: "#fafafa",
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#333",
-  },
-  header: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  marginBottom: 20,
-},
-closeButton: {
-  padding: 8,
-},
-closeButtonText: {
-  fontSize: 22,
-  fontWeight: "700",
-  color: "#333",
-},
-
+  searchInput: { flex: 1, fontSize: 16, color: "#333" },
 });

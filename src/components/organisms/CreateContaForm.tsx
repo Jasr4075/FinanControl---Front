@@ -13,7 +13,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import api from "@/src/utils/api";
 import { Conta } from "../../types/types";
-
+import { User } from "lucide-react-native";
 
 interface Props {
   conta?: Conta | null;
@@ -52,7 +52,7 @@ const bancosPopulares = [
   "Banco Modal",
   "Banco Daycoval",
   "Banco Mercantil do Brasil",
-  "Banco Modal Mais"
+  "Banco Modal Mais",
 ];
 
 export default function CreateContaForm({ onClose }: Props) {
@@ -61,7 +61,7 @@ export default function CreateContaForm({ onClose }: Props) {
   const [conta, setConta] = useState("");
   const [saldo, setSaldo] = useState("");
   const [type, setType] = useState("");
-    const bancosFiltrados = useMemo(() => {
+  const bancosFiltrados = useMemo(() => {
     if (!bancoNome) return bancosPopulares;
     return bancosPopulares.filter((banco) =>
       banco.toLowerCase().includes(bancoNome.toLowerCase())
@@ -70,8 +70,10 @@ export default function CreateContaForm({ onClose }: Props) {
 
   const handleCreate = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!user.id) {
+      const userRaw = localStorage.getItem("user");
+      const user = userRaw ? JSON.parse(userRaw) : null;
+
+      if (!user?.id) {
         Alert.alert("Erro", "Usuário não encontrado no localStorage");
         return;
       }
@@ -109,40 +111,39 @@ export default function CreateContaForm({ onClose }: Props) {
         <Text style={styles.title}>Adicionar Conta</Text>
 
         {/* Banco */}
-<Text style={styles.label}>Banco *</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nome do Banco"
-        value={bancoNome}
-        onChangeText={setBancoNome}
-      />
+        <Text style={styles.label}>Banco *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Nome do Banco"
+          value={bancoNome}
+          onChangeText={setBancoNome}
+        />
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.horizontalScroll}
-      >
-        {bancosFiltrados.map((banco) => (
-          <TouchableOpacity
-            key={banco}
-            style={[
-              styles.selectButton,
-              bancoNome === banco && styles.selectButtonActive,
-            ]}
-            onPress={() => setBancoNome(banco)}
-          >
-            <Text
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.horizontalScroll}
+        >
+          {bancosFiltrados.map((banco) => (
+            <TouchableOpacity
+              key={banco}
               style={[
-                styles.selectButtonText,
-                bancoNome === banco && styles.selectButtonTextActive,
+                styles.selectButton,
+                bancoNome === banco && styles.selectButtonActive,
               ]}
+              onPress={() => setBancoNome(banco)}
             >
-              {banco}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
+              <Text
+                style={[
+                  styles.selectButtonText,
+                  bancoNome === banco && styles.selectButtonTextActive,
+                ]}
+              >
+                {banco}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
         <TextInput
           style={styles.input}

@@ -14,3 +14,4 @@ export default function ResumoFinanceiro({ saldo, receitas, despesas }: { saldo:
 const styles = StyleSheet.create({
   container: { marginBottom: 15 },
 });
+

@@ -8,15 +8,14 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
   View,
+  RefreshControl,
 } from "react-native";
-import { RefreshControl } from "react-native-gesture-handler";
 import { useRouter } from "expo-router";
-import { Conta } from "../../src/types/types";
-import { Movimentacao } from "../../src/types/types";
+import { Conta, Movimentacao } from "../../src/types/types";
 
 export default function Home() {
   const [contas, setContas] = useState<Conta[]>([]);
@@ -24,10 +23,9 @@ export default function Home() {
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
   const router = useRouter();
-
   const { user } = useAuthUser();
-
   const userId = user?.id || "";
 
   const receitas = useReceitasMes(userId);
@@ -49,43 +47,32 @@ export default function Home() {
       }));
       setContas(contasData);
 
-      const total = contasData.reduce(
-        (acc: number, c: Conta) => acc + c.saldo,
-        0
-      );
+      const total = contasData.reduce((acc: number, c: Conta) => acc + c.saldo, 0);
       setSaldoTotal(total);
 
       const despesasRes = await api.get(`/despesas/ultimas/${userId}`);
-      const despesasData: Movimentacao[] = despesasRes.data.data.map(
-        (d: any) => ({
-          id: d.id,
-          tipo: "Despesa",
-          descricao: d.descricao,
-          valor: parseFloat(d.valor),
-          data: d.createdAt,
-          metodoPagamento: d.metodoPagamento,
-          // SOLUÇÃO FINAL
-          conta: d.conta ? { bancoNome: d.conta.bancoNome } : undefined,
-          categoria: d.categoria ? { name: d.categoria.name } : undefined,
-          cartao: d.cartao ? { name: d.cartao } : undefined,
-        })
-      );
+      const despesasData: Movimentacao[] = despesasRes.data.data.map((d: any) => ({
+        id: d.id,
+        tipo: "Despesa",
+        descricao: d.descricao,
+        valor: parseFloat(d.valor),
+        data: d.createdAt,
+        metodoPagamento: d.metodoPagamento ?? "Sem método",
+        conta: d.conta ? { bancoNome: d.conta.bancoNome } : undefined,
+        categoria: d.categoria ? { name: d.categoria.name } : undefined,
+        cartao: d.cartao ? { nome: d.cartao.nome } : undefined,
+      }));
 
       const receitasRes = await api.get(`/receitas/ultimas/${userId}`);
-      const receitasData: Movimentacao[] = receitasRes.data.data.map(
-        (r: any) => ({
-          id: r.id,
-          tipo: "Receita",
-          descricao: r.descricao ?? r.description,
-          valor: parseFloat(r.valor ?? r.quantidade),
-          data: r.createdAt,
-          metodoPagamento: r.metodoPagamento,
-          conta: r.conta ? { bancoNome: r.conta.bancoNome } : undefined,
-
-          categoria: r.categories ? { name: r.categories.name } : undefined,
-          cartao: r.cartao ? { name: r.cartao } : undefined,
-        })
-      );
+      const receitasData: Movimentacao[] = receitasRes.data.data.map((r: any) => ({
+        id: r.id,
+        tipo: "Receita",
+        descricao: r.descricao ?? r.description,
+        valor: parseFloat(r.valor ?? r.quantidade),
+        data: r.createdAt,
+        conta: r.conta ? { bancoNome: r.conta.bancoNome } : undefined,
+        categoria: r.categories ? { name: r.categories.name } : undefined,
+      }));
 
       const todasMovimentacoes = [...receitasData, ...despesasData].sort(
         (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
@@ -110,9 +97,60 @@ export default function Home() {
     loadData();
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Carregando seus dados...</Text>
+      </View>
+    );
+  }
+
+  // Datos para la FlatList
+  const sections = [
+    { type: 'header', data: ['header'] },
+    { type: 'resumo', data: ['resumo'] },
+    { type: 'contas', data: ['contas'] },
+    { type: 'actions', data: ['actions'] },
+    { type: 'movimentacoes', data: ['movimentacoes'] },
+  ];
+
+  const renderItem = ({ item }: { item: string }) => {
+    switch (item) {
+      case 'header':
+        return (
+          <View accessibilityRole="header" style={styles.header}>
+            <Text
+              style={styles.greeting}
+              onPress={() => router.push("/(dashboard)/profile")}
+            >
+              Olá, {user?.nome || "usuário"} 👋
+            </Text>
+            <Text style={styles.title}>Resumo Financeiro</Text>
+          </View>
+        );
+      case 'resumo':
+        return <ResumoFinanceiro saldo={saldoTotal} receitas={receitas} despesas={despesas} />;
+      case 'contas':
+        return <ContasList contas={contas} scrollEnabled={false} />;
+      case 'actions':
+        return (
+          <View style={{ marginVertical: 20 }}>
+            <ActionButtonsRow onUpdateData={loadData} />
+          </View>
+        );
+      case 'movimentacoes':
+        return <MovimentacoesList movimentacoes={movimentacoes} scrollEnabled={false} />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <ScrollView
-      style={styles.container}
+    <FlatList
+      data={['header', 'resumo', 'contas', 'actions', 'movimentacoes']}
+      renderItem={renderItem}
+      keyExtractor={(item, index) => `${item}-${index}`}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -120,45 +158,17 @@ export default function Home() {
           tintColor="#007AFF"
         />
       }
-    >
-      <View accessibilityRole="header" style={styles.header}>
-        {/* 👇 Olá com nome do usuário */}
-        <Text
-          style={styles.greeting}
-          onPress={() => router.push("/(dashboard)/profile")}
-        >
-          Olá, {user?.nome || "usuário"} 👋
-        </Text>
-        <Text style={styles.title}>Resumo Financeiro</Text>
-      </View>
-
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Carregando seus dados...</Text>
-        </View>
-      ) : (
-        <>
-          <ResumoFinanceiro
-            saldo={saldoTotal}
-            receitas={receitas}
-            despesas={despesas}
-          />
-          <View>
-            <ContasList contas={contas} />
-          </View>
-          <View style={{ marginVertical: 20 }}>
-            <ActionButtonsRow onUpdateData={loadData} />
-          </View>
-          <MovimentacoesList movimentacoes={movimentacoes} />
-        </>
-      )}
-    </ScrollView>
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ffffffff", padding: 16 },
+  container: { 
+    padding: 16,
+    paddingBottom: 40, // Espacio adicional al final
+  },
   header: {
     marginBottom: 20,
     alignItems: "center",
