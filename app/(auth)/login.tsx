@@ -23,14 +23,6 @@ export default function LoginScreen() {
   const [error, setError] = useState<{ username?: string; senha?: string }>({});
   const loadingAuth = useRedirectIfAuth();
 
-  if (loadingAuth) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Verificando autenticação...</Text>
-      </View>
-    );
-  }
 
   async function handleLogin() {
     let newErrors: typeof error = {};

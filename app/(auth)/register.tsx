@@ -26,7 +26,6 @@ export default function RegisterScreen() {
   const [error, setError] = useState<Record<string, string>>({});
   const loadingAuth = useRedirectIfAuth();
 
-  if (loadingAuth) return <Text>Loading...</Text>;
   // 🔹 Atualiza email e gera username automático
   const handleEmailChange = (value: string) => {
     setEmail(value);

@@ -3,9 +3,6 @@ import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import useRedirectIfAuth from "@/src/hooks/useRedirectIfAuth";
 
 export default function Index() {
-    const loadingAuth = useRedirectIfAuth();
-
-    if (loadingAuth) return <Text>Loading...</Text>;
   return (
     <View style={styles.container}>
       {/* Futuro espaço para logo */}

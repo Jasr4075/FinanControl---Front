@@ -18,7 +18,6 @@ export default function ForgotPasswordScreen() {
   const router = useRouter();
     const loadingAuth = useRedirectIfAuth();
   
-    if (loadingAuth) return <Text>Loading...</Text>;
 
   const handleReset = async () => {
     if (!email) return Alert.alert("Erro", "Digite seu email");

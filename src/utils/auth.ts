@@ -6,7 +6,7 @@ const USER_KEY = "user";
 
 // 🔹 Apenas web precisa dessa limpeza
 async function cleanupCorruptedData() {
-  if (Platform.OS === "web") {
+  if (Platform.OS === "web" && typeof localStorage !== "undefined") {
     try {
       const userData = localStorage.getItem(USER_KEY);
       if (userData && (userData === "[object Object]" || userData.includes("[object Object]"))) {
@@ -18,7 +18,8 @@ async function cleanupCorruptedData() {
     }
   }
 }
-cleanupCorruptedData();
+
+// cleanupCorruptedData();
 
 export async function saveToken(token: string) {
   if (Platform.OS === "web") {
