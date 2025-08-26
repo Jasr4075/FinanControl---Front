@@ -2,17 +2,7 @@
 import { useEffect, useState } from "react";
 import api from "../utils/api";
 import { getUser } from "../utils/auth";
-
-interface Movimentacao {
-  id: string;
-  tipo: "Receita" | "Despesa";
-  descricao: string;
-  valor: number;
-  data: string;
-  metodoPagamento: string;
-  conta?: { bancoNome: string };
-  categoria?: { name: string };
-}
+import { Movimentacao } from "../types/types";
 
 export function useUltimasDespesas() {
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);

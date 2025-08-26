@@ -1,14 +1,6 @@
 import { useState } from "react";
 import api from "@/src/utils/api";
-
-interface CreateReceitaInput {
-  userId: string;
-  accountId: string;
-  categoryId: string;
-  description: string;
-  quantidade: number;
-  data: string;
-}
+import { CreateReceitaInput } from "../types/types";
 
 export function useCreateReceita() {
   const [loading, setLoading] = useState(false);

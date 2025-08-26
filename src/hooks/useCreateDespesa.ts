@@ -1,20 +1,6 @@
 import { useState } from "react";
 import api from "@/src/utils/api";
-
-interface CreateDespesaInput {
-  userId: string;
-  contaId?: string;
-  cartaoId?: string;
-  categoryId: string;
-  descricao: string;
-  valor: number;
-  metodoPagamento: "PIX" | "CREDITO" | "DEBITO" | "DINHEIRO";
-  data: string; // YYYY-MM-DD
-  parcelado?: boolean;
-  numeroParcelas?: number;
-  juros?: number;
-  observacoes?: string;
-}
+import { CreateDespesaInput } from "../types/types";
 
 export function useCreateDespesa() {
   const [loading, setLoading] = useState(false);

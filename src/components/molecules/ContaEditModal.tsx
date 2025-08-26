@@ -57,7 +57,7 @@ export default function ContaEditModal({ conta, visible, onClose, onEdit }: Prop
             <Text style={styles.label}>CDI %:</Text> {conta.cdiPercent}
           </Text>
           <Text style={styles.detailText}>
-            <Text style={styles.label}>Cartões:</Text> {conta.cartoes.join(", ")}
+            <Text style={styles.label}>Cartões:</Text> {(conta.cartoes?.join(", ") ?? "")}
           </Text>
 
           {onEdit && (

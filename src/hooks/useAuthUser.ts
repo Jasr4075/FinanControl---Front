@@ -1,22 +1,7 @@
 import { useRouter } from "expo-router";
 import { clearAuth, getUser, validateToken } from "@/src/utils/auth";
 import { useCallback, useEffect, useState } from "react";
-
-export interface AuthUser {
-  id: string;
-  username?: string;
-  email?: string;
-  [key: string]: any;
-}
-
-interface UseAuthUserReturn {
-  user: AuthUser | null;
-  loading: boolean;
-  error: string | null;
-  reload: () => Promise<void>;
-  logout: () => Promise<void>;
-  isValid: boolean;
-}
+import { UseAuthUserReturn, AuthUser } from "../types/types";
 
 export default function useAuthUser(): UseAuthUserReturn {
   const router = useRouter();

@@ -15,18 +15,13 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { getUser } from "@/src/utils/auth";
 import api from "@/src/utils/api";
 import { useCreateReceita } from "@/src/hooks/useCreateReceita";
+import { Conta, Categoria } from "../../types/types";
 
-interface Categoria {
-  id: string;
-  name: string;
-}
-
-interface Conta {
-  id: string;
-  nome: string;
-}
-
-export default function CreateReceitaForm({ onClose }: { onClose?: () => void }) {
+export default function CreateReceitaForm({
+  onClose,
+}: {
+  onClose?: () => void;
+}) {
   const { createReceita, loading, error, success } = useCreateReceita();
 
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -42,15 +37,25 @@ export default function CreateReceitaForm({ onClose }: { onClose?: () => void })
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  useEffect(() => { if (success) onClose?.(); }, [success, onClose]);
-  useEffect(() => { if (error) Alert.alert("Erro", error.toString()); }, [error]);
+  useEffect(() => {
+    if (success) onClose?.();
+  }, [success, onClose]);
+  useEffect(() => {
+    if (error) Alert.alert("Erro", error.toString());
+  }, [error]);
 
   useEffect(() => {
     async function fetchCategorias() {
       try {
-        const { data } = await api.get("/categorias");
-        if (data?.success) setCategorias(data.data);
-      } catch {}
+        const res = await api.get("/categorias");
+        const receitas = res.data.data.filter(
+          (cat: any) => cat.type?.toUpperCase() === "RECEITA"
+        );
+        setCategorias(receitas);
+      } catch (err) {
+        console.error(err);
+        Alert.alert("Erro", "Não foi possível carregar as categorias");
+      }
     }
     fetchCategorias();
   }, []);
@@ -88,8 +93,8 @@ export default function CreateReceitaForm({ onClose }: { onClose?: () => void })
     } as any);
   };
 
-  const categoriasFiltradas = categorias.filter((c) =>
-    c.name.toLowerCase().includes(searchCategoria.toLowerCase())
+  const categoriasFiltradas = categorias.filter((cat) =>
+    cat.name.toLowerCase().includes(searchCategoria.toLowerCase())
   );
   const contasFiltradas = contas.filter((c) =>
     c.nome.toLowerCase().includes(searchConta.toLowerCase())
@@ -111,7 +116,12 @@ export default function CreateReceitaForm({ onClose }: { onClose?: () => void })
         {/* Conta */}
         <Text style={styles.label}>Conta *</Text>
         <View style={styles.searchContainer}>
-          <Feather name="search" size={20} color="#999" style={{ marginRight: 8 }} />
+          <Feather
+            name="search"
+            size={20}
+            color="#999"
+            style={{ marginRight: 8 }}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar conta"
@@ -119,7 +129,11 @@ export default function CreateReceitaForm({ onClose }: { onClose?: () => void })
             onChangeText={setSearchConta}
           />
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.horizontalScroll}
+        >
           {contasFiltradas.map((c) => (
             <TouchableOpacity
               key={c.id}
@@ -144,7 +158,12 @@ export default function CreateReceitaForm({ onClose }: { onClose?: () => void })
         {/* Categoria */}
         <Text style={styles.label}>Categoria *</Text>
         <View style={styles.searchContainer}>
-          <Feather name="search" size={20} color="#999" style={{ marginRight: 8 }} />
+          <Feather
+            name="search"
+            size={20}
+            color="#999"
+            style={{ marginRight: 8 }}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar categoria"
@@ -152,23 +171,27 @@ export default function CreateReceitaForm({ onClose }: { onClose?: () => void })
             onChangeText={setSearchCategoria}
           />
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-          {categoriasFiltradas.map((c) => (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.horizontalScroll}
+        >
+          {categoriasFiltradas.map((cat) => (
             <TouchableOpacity
-              key={c.id}
+              key={cat.id}
               style={[
                 styles.selectButton,
-                categoryId === c.id && styles.selectButtonActive,
+                categoryId === cat.id && styles.selectButtonActive,
               ]}
-              onPress={() => setCategoryId(c.id)}
+              onPress={() => setCategoryId(cat.id)}
             >
               <Text
                 style={[
                   styles.selectButtonText,
-                  categoryId === c.id && styles.selectButtonTextActive,
+                  categoryId === cat.id && styles.selectButtonTextActive,
                 ]}
               >
-                {c.name}
+                {cat.name}
               </Text>
             </TouchableOpacity>
           ))}
@@ -200,8 +223,13 @@ export default function CreateReceitaForm({ onClose }: { onClose?: () => void })
         {/* Data */}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Data</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-            <Text style={styles.dateText}>{date.toLocaleDateString("pt-BR")}</Text>
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.dateText}>
+              {date.toLocaleDateString("pt-BR")}
+            </Text>
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
@@ -217,7 +245,9 @@ export default function CreateReceitaForm({ onClose }: { onClose?: () => void })
         </View>
 
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>{loading ? "Criando..." : "Criar Receita"}</Text>
+          <Text style={styles.submitButtonText}>
+            {loading ? "Criando..." : "Criar Receita"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -226,22 +256,80 @@ export default function CreateReceitaForm({ onClose }: { onClose?: () => void })
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: "#eee" },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
   title: { fontSize: 24, fontWeight: "700", color: "#1a1a1a" },
-  closeButton: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#f0f0f0", justifyContent: "center", alignItems: "center" },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   closeButtonText: { fontSize: 18, color: "#666", fontWeight: "600" },
   scrollContent: { padding: 20, paddingBottom: 40 },
   formGroup: { marginBottom: 20, zIndex: 1 },
   label: { fontSize: 16, fontWeight: "600", marginBottom: 8, color: "#333" },
-  input: { backgroundColor: "#fff", borderRadius: 12, padding: 16, fontSize: 16, borderWidth: 1, borderColor: "#ddd", color: "#333" },
-  dateButton: { backgroundColor: "#fff", borderRadius: 12, padding: 16, borderWidth: 1, borderColor: "#ddd" },
+  input: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    color: "#333",
+  },
+  dateButton: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
   dateText: { fontSize: 16, color: "#333" },
-  submitButton: { backgroundColor: "#28a745", paddingVertical: 16, borderRadius: 12, alignItems: "center", marginTop: 24, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  submitButton: {
+    backgroundColor: "#28a745",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   submitButtonText: { color: "#fff", fontSize: 17, fontWeight: "700" },
   horizontalScroll: { marginBottom: 16 },
-  searchContainer: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#ddd", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10, backgroundColor: "#fafafa" },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+    backgroundColor: "#fafafa",
+  },
   searchInput: { flex: 1, fontSize: 16, color: "#333" },
-  selectButton: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: "#ddd", marginRight: 10, backgroundColor: "#fff" },
+  selectButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    marginRight: 10,
+    backgroundColor: "#fff",
+  },
   selectButtonActive: { backgroundColor: "#28a745", borderColor: "#28a745" },
   selectButtonText: { color: "#333", fontWeight: "600" },
   selectButtonTextActive: { color: "#fff" },

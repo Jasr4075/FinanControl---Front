@@ -1,18 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { isAuthenticated, validateToken, getUser } from "@/src/utils/auth";
-
-// Define os paths válidos que o router aceita
-type ValidRedirectPaths =
-  | "/(dashboard)/home"
-  | "/login"
-  | "/(auth)/forgot-password";
-
-interface UseRedirectIfAuthOptions {
-  redirectPath?: ValidRedirectPaths;
-  onRedirect?: () => void;
-  onStay?: () => void;
-}
+import { ValidRedirectPaths, UseRedirectIfAuthOptions } from "../types/types";
 
 export default function useRedirectIfAuth(options: UseRedirectIfAuthOptions = {}) {
   const {

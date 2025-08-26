@@ -15,21 +15,7 @@ import {
   View,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-
-interface Categoria {
-  type: "RECEITA" | "DESPESA";
-  id: string;
-  name: string;
-}
-
-interface Conta {
-  id: string;
-  nome: string;
-  saldo: number;
-  type?: string;
-  efetivo?: boolean;
-  cartoes?: { id: string; nome: string }[];
-}
+import { Conta, Categoria } from "../../types/types";
 
 interface Props {
   contaId?: string;
@@ -70,12 +56,11 @@ export default function CreateDespesaForm({
   const [searchCategoria, setSearchCategoria] = useState("");
   const [searchConta, setSearchConta] = useState("");
 
-// dentro do seu componente
-// filtra só pelo search, já que categorias já é só DESPESA
-const categoriasFiltradas = categorias.filter((cat) =>
-  cat.name.toLowerCase().includes(searchCategoria.toLowerCase())
-);
-
+  // dentro do seu componente
+  // filtra só pelo search, já que categorias já é só DESPESA
+  const categoriasFiltradas = categorias.filter((cat) =>
+    cat.name.toLowerCase().includes(searchCategoria.toLowerCase())
+  );
 
   const contasFiltradas = contas.filter((c) =>
     c.nome.toLowerCase().includes(searchConta.toLowerCase())
@@ -111,7 +96,9 @@ const categoriasFiltradas = categorias.filter((cat) =>
       try {
         const res = await api.get("/categorias");
         // filtra apenas DESPESA
-        const despesas = res.data.data.filter((cat: any) => cat.type === "DESPESA");
+        const despesas = res.data.data.filter(
+          (cat: any) => cat.type === "DESPESA"
+        );
         setCategorias(despesas); // já seta direto
       } catch (err) {
         console.error(err);
@@ -289,47 +276,46 @@ const categoriasFiltradas = categorias.filter((cat) =>
         )}
 
         {/* Categoria */}
-<Text style={styles.label}>Categoria *</Text>
-<View style={styles.searchContainer}>
-  <Feather
-    name="search"
-    size={20}
-    color="#999"
-    style={{ marginRight: 8 }}
-  />
-  <TextInput
-    style={styles.searchInput}
-    placeholder="Buscar categoria"
-    value={searchCategoria}
-    onChangeText={setSearchCategoria}
-  />
-</View>
-<ScrollView
-  horizontal
-  showsHorizontalScrollIndicator={false}
-  style={styles.horizontalScroll}
->
-  {categoriasFiltradas.map((cat) => (
-    <TouchableOpacity
-      key={cat.id}
-      style={[
-        styles.selectButton,
-        categoryId === cat.id && styles.selectButtonActive,
-      ]}
-      onPress={() => setCategoryId(cat.id)}
-    >
-      <Text
-        style={[
-          styles.selectButtonText,
-          categoryId === cat.id && styles.selectButtonTextActive,
-        ]}
-      >
-        {cat.name}
-      </Text>
-    </TouchableOpacity>
-  ))}
-</ScrollView>
-
+        <Text style={styles.label}>Categoria *</Text>
+        <View style={styles.searchContainer}>
+          <Feather
+            name="search"
+            size={20}
+            color="#999"
+            style={{ marginRight: 8 }}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar categoria"
+            value={searchCategoria}
+            onChangeText={setSearchCategoria}
+          />
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.horizontalScroll}
+        >
+          {categoriasFiltradas.map((cat) => (
+            <TouchableOpacity
+              key={cat.id}
+              style={[
+                styles.selectButton,
+                categoryId === cat.id && styles.selectButtonActive,
+              ]}
+              onPress={() => setCategoryId(cat.id)}
+            >
+              <Text
+                style={[
+                  styles.selectButtonText,
+                  categoryId === cat.id && styles.selectButtonTextActive,
+                ]}
+              >
+                {cat.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
         {/* Descrição */}
         <Text style={styles.label}>Descrição *</Text>
