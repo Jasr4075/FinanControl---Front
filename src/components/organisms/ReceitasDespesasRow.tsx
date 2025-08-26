@@ -1,21 +1,44 @@
-// ReceitasDespesasRow.tsx
 import { View, StyleSheet } from "react-native";
 import ReceitaDespesaCard from "../molecules/ReceitaDespesaCard";
+
+const CARD_MIN_WIDTH = 200;
 
 export default function ReceitasDespesasRow({
   receitas,
   despesas,
   faturasBanco,
+  receitasMesAnterior = 926475,
+  despesasMesAnterior = 143514,
 }: {
   receitas: number;
   despesas: number;
   faturasBanco: number;
+  receitasMesAnterior?: number;
+  despesasMesAnterior?: number;
 }) {
   return (
     <View style={styles.row}>
-      <ReceitaDespesaCard titulo="Receitas" valor={receitas} cor="green" />
-      <ReceitaDespesaCard titulo="Fatura Cartão (Banco X)" valor={faturasBanco} cor="blue" />
-      <ReceitaDespesaCard titulo="Despesas" valor={despesas} cor="red" />
+      <ReceitaDespesaCard
+        titulo="Receitas"
+        valor={receitas}
+        cor="green"
+        previousMonthValue={receitasMesAnterior}
+        detalhes={[
+          { id: "1", descricao: "Salário", valor: 5000 },
+          { id: "2", descricao: "Freelance", valor: 1200 },
+        ]}
+      />
+
+      <ReceitaDespesaCard
+        titulo="Despesas"
+        valor={despesas}
+        cor="red"
+        previousMonthValue={despesasMesAnterior}
+        detalhes={[
+          { id: "1", descricao: "Aluguel", valor: 1500 },
+          { id: "2", descricao: "Mercado", valor: 800 },
+        ]}
+      />
     </View>
   );
 }
@@ -23,9 +46,15 @@ export default function ReceitasDespesasRow({
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: 15,
-    flexWrap: "wrap", // permite quebrar linha se tiver muitos cards
     gap: 10,
+  },
+  card: {
+    flexGrow: 1,
+    flexBasis: CARD_MIN_WIDTH,
+    minWidth: CARD_MIN_WIDTH,
+    marginBottom: 10,
   },
 });

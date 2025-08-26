@@ -6,7 +6,7 @@ export default function ResumoFinanceiro({ saldo, receitas, despesas }: { saldo:
   return (
     <View style={styles.container}>
       <SaldoTotalCard saldo={saldo} />
-      <ReceitasDespesasRow receitas={receitas} despesas={despesas} />
+      <ReceitasDespesasRow receitas={receitas} despesas={despesas} faturasBanco={0} />
     </View>
   );
 }
