@@ -5,21 +5,31 @@ const TOKEN_KEY = "userToken";
 const USER_KEY = "user";
 
 // 🔹 Apenas web precisa dessa limpeza
-// async function cleanupCorruptedData() {
-//   if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-//     try {
-//       const userData = localStorage.getItem(USER_KEY);
-//       if (userData && (userData === "[object Object]" || userData.includes("[object Object]"))) {
-//         localStorage.removeItem(USER_KEY);
-//         console.log("Dados corrompidos removidos do localStorage");
-//       }
-//     } catch (e) {
-//       console.error("Erro ao limpar dados corrompidos:", e);
-//     }
-//   }
-// }
+async function cleanupCorruptedData() {
+  if (Platform.OS !== 'web' || typeof localStorage === 'undefined') return
+  try {
+    const raw = localStorage.getItem(USER_KEY)
+    if (!raw) return
+    const looksPlain = raw === '[object Object]' || raw.trim() === ''
+    const looksInvalidJSON = !raw.startsWith('{') && !raw.startsWith('[')
+    if (looksPlain || looksInvalidJSON) {
+      localStorage.removeItem(USER_KEY)
+      console.log('[auth] Removido user corrompido (forma inválida)')
+      return
+    }
+    // tenta parsear para confirmar
+    try {
+      JSON.parse(raw)
+    } catch {
+      localStorage.removeItem(USER_KEY)
+      console.log('[auth] Removido user corrompido (JSON parse falhou)')
+    }
+  } catch (e) {
+    console.error('[auth] Erro ao limpar dados corrompidos:', e)
+  }
+}
 
-// cleanupCorruptedData();
+cleanupCorruptedData()
 
 export async function saveToken(token: string) {
   if (Platform.OS === "web") {
@@ -59,11 +69,13 @@ export async function getUser(): Promise<any | null> {
       : await SecureStore.getItemAsync(USER_KEY);
 
   if (!raw) return null;
-
-  try {
-    return JSON.parse(raw);
-  } catch {
-    console.warn("Dados inválidos, limpando...");
+  // valida forma antes de parsear
+  if (raw === '[object Object]' || (!raw.startsWith('{') && !raw.startsWith('['))) {
+    await clearAuth();
+    return null;
+  }
+  try { return JSON.parse(raw); }
+  catch {
     await clearAuth();
     return null;
   }
