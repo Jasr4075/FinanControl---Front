@@ -9,11 +9,11 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Switch,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import api from "@/src/utils/api";
 import { Conta } from "../../types/types";
-import { User } from "lucide-react-native";
 
 interface Props {
   conta?: Conta | null;
@@ -61,6 +61,17 @@ export default function CreateContaForm({ onClose }: Props) {
   const [conta, setConta] = useState("");
   const [saldo, setSaldo] = useState("");
   const [type, setType] = useState("");
+  const [criarCartao, setCriarCartao] = useState(false);
+  const [cartaoNome, setCartaoNome] = useState("");
+  const [cartaoTipo, setCartaoTipo] = useState<"CREDITO" | "DEBITO" | "MISTO">(
+    "CREDITO"
+  );
+  const [creditLimit, setCreditLimit] = useState("");
+  const [closingDay, setClosingDay] = useState("");
+  const [dueDay, setDueDay] = useState("");
+  const [cashbackPercent, setCashbackPercent] = useState("");
+  const [hasCashback, setHasCashback] = useState(false);
+
   const bancosFiltrados = useMemo(() => {
     if (!bancoNome) return bancosPopulares;
     return bancosPopulares.filter((banco) =>
@@ -83,7 +94,7 @@ export default function CreateContaForm({ onClose }: Props) {
         return;
       }
 
-      await api.post("/contas", {
+      const contaResp = await api.post("/contas", {
         userId: user.id,
         type,
         bancoNome,
@@ -94,7 +105,42 @@ export default function CreateContaForm({ onClose }: Props) {
         cdiPercent: 0.0,
       });
 
-      Alert.alert("Sucesso", "Conta criada com sucesso!");
+      let cartaoCriadoId: string | null = null;
+      if (criarCartao) {
+        try {
+          const contaId = contaResp.data?.data?.id;
+          if (!contaId) throw new Error("Conta não retornou ID");
+          if (!cartaoNome) throw new Error("Nome do cartão é obrigatório");
+          if (!closingDay || !dueDay)
+            throw new Error("Dias de fechamento e vencimento obrigatórios");
+          await api.post("/cartoes", {
+            userId: user.id,
+            contaId,
+            nome: cartaoNome,
+            type: cartaoTipo,
+            creditLimit: creditLimit ? parseFloat(creditLimit) : 0,
+            hasCashback,
+            cashbackPercent:
+              hasCashback && cashbackPercent ? parseFloat(cashbackPercent) : 0,
+            closingDay: parseInt(closingDay, 10),
+            dueDay: parseInt(dueDay, 10),
+          });
+          cartaoCriadoId = "ok";
+        } catch (e: any) {
+          console.error("Erro ao criar cartão vinculado", e);
+          Alert.alert(
+            "Aviso",
+            "Conta criada, mas falhou ao criar cartão: " + (e?.message || "")
+          );
+        }
+      }
+
+      Alert.alert(
+        "Sucesso",
+        `Conta criada${
+          criarCartao ? (cartaoCriadoId ? " + cartão" : " (cartão falhou)") : ""
+        }!`
+      );
       onClose();
     } catch (error) {
       console.error(error);
@@ -195,6 +241,147 @@ export default function CreateContaForm({ onClose }: Props) {
           ))}
         </ScrollView>
 
+        {/* Opção criar cartão */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.label}>Criar cartão agora?</Text>
+          <Switch value={criarCartao} onValueChange={setCriarCartao} />
+        </View>
+
+        {criarCartao && (
+          <View style={styles.cardContainer}>
+            <Text style={styles.subSectionTitle}>Dados do Cartão</Text>
+
+            {/* Nome do cartão */}
+            <TextInput
+              style={styles.input}
+              placeholder="Nome do Cartão (ex: Visa Gold)"
+              value={cartaoNome}
+              onChangeText={setCartaoNome}
+            />
+
+            {/* Tipo de cartão */}
+            <Text style={styles.label}>Tipo</Text>
+            <View style={styles.inlineRow}>
+              <TouchableOpacity
+                style={[
+                  styles.pill,
+                  cartaoTipo === "CREDITO" && styles.pillActive,
+                ]}
+                onPress={() => setCartaoTipo("CREDITO")}
+              >
+                <Feather
+                  name="credit-card"
+                  size={16}
+                  color={cartaoTipo === "CREDITO" ? "#fff" : "#333"}
+                />
+                <Text
+                  style={[
+                    styles.pillText,
+                    cartaoTipo === "CREDITO" && styles.pillTextActive,
+                  ]}
+                >
+                  Crédito
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.pill,
+                  cartaoTipo === "DEBITO" && styles.pillActive,
+                ]}
+                onPress={() => setCartaoTipo("DEBITO")}
+              >
+                <Feather
+                  name="dollar-sign"
+                  size={16}
+                  color={cartaoTipo === "DEBITO" ? "#fff" : "#333"}
+                />
+                <Text
+                  style={[
+                    styles.pillText,
+                    cartaoTipo === "DEBITO" && styles.pillTextActive,
+                  ]}
+                >
+                  Débito
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.pill,
+                  cartaoTipo === "MISTO" && styles.pillActive,
+                ]}
+                onPress={() => setCartaoTipo("MISTO")}
+              >
+                <Feather
+                  name="layers"
+                  size={16}
+                  color={cartaoTipo === "MISTO" ? "#fff" : "#333"}
+                />
+                <Text
+                  style={[
+                    styles.pillText,
+                    cartaoTipo === "MISTO" && styles.pillTextActive,
+                  ]}
+                >
+                  Misto
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Campos específicos para crédito/misto */}
+            {(cartaoTipo === "CREDITO" || cartaoTipo === "MISTO") && (
+              <>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Limite de Crédito"
+                  keyboardType="numeric"
+                  value={creditLimit}
+                  onChangeText={setCreditLimit}
+                />
+
+                <View style={styles.inlineRow}>
+                  <TextInput
+                    style={[styles.input, { flex: 1, marginRight: 6 }]}
+                    placeholder="Fechamento (1-28)"
+                    keyboardType="numeric"
+                    value={closingDay}
+                    onChangeText={setClosingDay}
+                  />
+                  <TextInput
+                    style={[styles.input, { flex: 1, marginLeft: 6 }]}
+                    placeholder="Vencimento (1-28)"
+                    keyboardType="numeric"
+                    value={dueDay}
+                    onChangeText={setDueDay}
+                  />
+                </View>
+
+                {/* Cashback */}
+                <View style={styles.cashbackRow}>
+                  <View>
+                    <Text style={styles.label}>Cashback</Text>
+                    <Text style={styles.hint}>
+                      Ative se este cartão oferecer cashback
+                    </Text>
+                  </View>
+                  <Switch value={hasCashback} onValueChange={setHasCashback} />
+                </View>
+
+                {hasCashback && (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="% Cashback (0-100)"
+                    keyboardType="numeric"
+                    value={cashbackPercent}
+                    onChangeText={setCashbackPercent}
+                  />
+                )}
+              </>
+            )}
+          </View>
+        )}
+
         <TouchableOpacity style={styles.buttonPrimary} onPress={handleCreate}>
           <Text style={styles.buttonText}>Salvar</Text>
         </TouchableOpacity>
@@ -285,5 +472,66 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    marginTop: 10,
+  },
+  cardContainer: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    padding: 14,
+    backgroundColor: "#f9f9f9",
+    marginBottom: 20,
+  },
+  subSectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 12,
+    color: "#333",
+  },
+  inlineRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: "#f1f3f5",
+    marginRight: 8,
+  },
+  pillActive: {
+    backgroundColor: "#28a745",
+  },
+  pillText: {
+    fontSize: 14,
+    color: "#333",
+    fontWeight: "500",
+  },
+  pillTextActive: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+  cashbackRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 10,
+    marginBottom: 12,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#ddd",
+  },
+  hint: {
+    fontSize: 12,
+    color: "#777",
   },
 });

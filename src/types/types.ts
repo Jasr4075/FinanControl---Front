@@ -22,6 +22,18 @@ export interface Movimentacao {
   cartao?: { name: string };
 }
 
+export interface MovimentacaoReceita {
+  id: string;
+  tipo: "Receita" | "Despesa";
+  descricao: string;
+  valor: number;
+  data: string;
+  metodoPagamento: string;
+  contas?: { bancoNome: string };
+  categoria?: { name: string };
+  cartao?: { name: string };
+}
+
 export interface Categoria {
   id: string;
   name: string;

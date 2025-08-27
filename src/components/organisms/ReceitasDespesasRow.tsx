@@ -1,8 +1,6 @@
 import { View, StyleSheet } from "react-native";
 import ReceitaDespesaCard from "../molecules/ReceitaDespesaCard";
 
-const CARD_MIN_WIDTH = 200;
-
 export default function ReceitasDespesasRow({
   receitas,
   despesas,
@@ -48,13 +46,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 15,
-    gap: 10,
-  },
-  card: {
-    flexGrow: 1,
-    flexBasis: CARD_MIN_WIDTH,
-    minWidth: CARD_MIN_WIDTH,
-    marginBottom: 10,
+    gap: 14,
+    marginBottom: 20,
   },
 });

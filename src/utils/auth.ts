@@ -5,19 +5,19 @@ const TOKEN_KEY = "userToken";
 const USER_KEY = "user";
 
 // 🔹 Apenas web precisa dessa limpeza
-async function cleanupCorruptedData() {
-  if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-    try {
-      const userData = localStorage.getItem(USER_KEY);
-      if (userData && (userData === "[object Object]" || userData.includes("[object Object]"))) {
-        localStorage.removeItem(USER_KEY);
-        console.log("Dados corrompidos removidos do localStorage");
-      }
-    } catch (e) {
-      console.error("Erro ao limpar dados corrompidos:", e);
-    }
-  }
-}
+// async function cleanupCorruptedData() {
+//   if (Platform.OS === "web" && typeof localStorage !== "undefined") {
+//     try {
+//       const userData = localStorage.getItem(USER_KEY);
+//       if (userData && (userData === "[object Object]" || userData.includes("[object Object]"))) {
+//         localStorage.removeItem(USER_KEY);
+//         console.log("Dados corrompidos removidos do localStorage");
+//       }
+//     } catch (e) {
+//       console.error("Erro ao limpar dados corrompidos:", e);
+//     }
+//   }
+// }
 
 // cleanupCorruptedData();
 

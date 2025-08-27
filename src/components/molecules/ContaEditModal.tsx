@@ -8,7 +8,9 @@ import {
   View,
   StyleSheet,
 } from "react-native";
-import { Edit2 } from "lucide-react-native";
+import { Feather } from "@expo/vector-icons";
+
+
 import { Conta } from "../../types/types";
 
 interface Props {
@@ -39,25 +41,32 @@ export default function ContaEditModal({ conta, visible, onClose, onEdit }: Prop
 
         <View>
           <Text style={styles.detailText}>
-            <Text style={styles.label}>Nome:</Text> {conta.nome}
+            <Text style={styles.label}>Nome:</Text>
+            {" "}{conta.nome}
           </Text>
           <Text style={styles.detailText}>
-            <Text style={styles.label}>Saldo:</Text> R$ {saldo.toFixed(2)}
+            <Text style={styles.label}>Saldo:</Text>
+            {" "}R$ {saldo.toFixed(2)}
           </Text>
           <Text style={styles.detailText}>
-            <Text style={styles.label}>Tipo:</Text> {conta.type}
+            <Text style={styles.label}>Tipo:</Text>
+            {" "}{conta.type}
           </Text>
           <Text style={styles.detailText}>
-            <Text style={styles.label}>Agência:</Text> {conta.agencia}
+            <Text style={styles.label}>Agência:</Text>
+            {" "}{conta.agencia}
           </Text>
           <Text style={styles.detailText}>
-            <Text style={styles.label}>Conta:</Text> {conta.conta}
+            <Text style={styles.label}>Conta:</Text>
+            {" "}{conta.conta}
           </Text>
           <Text style={styles.detailText}>
-            <Text style={styles.label}>CDI %:</Text> {conta.cdiPercent}
+            <Text style={styles.label}>CDI %:</Text>
+            {" "}{conta.cdiPercent}
           </Text>
           <Text style={styles.detailText}>
-            <Text style={styles.label}>Cartões:</Text> {(conta.cartoes?.join(", ") ?? "")}
+            <Text style={styles.label}>Cartões:</Text>
+            {" "}{conta.cartoes?.join(", ") ?? ""}
           </Text>
 
           {onEdit && (
@@ -65,7 +74,7 @@ export default function ContaEditModal({ conta, visible, onClose, onEdit }: Prop
               style={styles.editButton}
               onPress={() => onEdit(conta)}
             >
-              <Edit2 size={20} color="#fff" />
+              <Feather size={20} color="#fff" />
               <Text style={styles.editButtonText}>Editar</Text>
             </TouchableOpacity>
           )}

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import Card from "../atoms/Card";
 import ContaItem from "../molecules/ContaItem";
-import { Plus, Edit } from "lucide-react-native";
+import { Feather } from "@expo/vector-icons";
 import CreateContaForm from "../organisms/CreateContaForm";
 import ContaEditModal from "../molecules/ContaEditModal";
 import { Conta } from "../../types/types";
@@ -40,7 +40,7 @@ export default function ContasList({ contas, scrollEnabled = true }: ContasListP
           style={styles.addButton}
           onPress={() => setShowForm(true)}
         >
-          <Plus size={22} color="#fff" />
+          <Feather name="plus" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -111,7 +111,7 @@ export default function ContasList({ contas, scrollEnabled = true }: ContasListP
                   style={styles.editButton}
                   onPress={() => alert("Editar conta")}
                 >
-                  <Edit size={20} color="#fff" />
+                  <Feather name="edit" size={20} color="#fff" />
                   <Text style={styles.editButtonText}>Editar Conta</Text>
                 </TouchableOpacity>
               </View>

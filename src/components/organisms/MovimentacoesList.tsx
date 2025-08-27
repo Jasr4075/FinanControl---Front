@@ -131,7 +131,7 @@ export default function MovimentacoesList({
             </Text>
             <Text style={styles.meta}>Método: {selected?.metodoPagamento}</Text>
             <Text style={styles.meta}>
-              Conta: {selected?.conta?.bancoNome ?? "Conta"}
+              Conta: {selected?.conta?.bancoNome ?? "Sem conta"}
             </Text>
             <Text style={styles.meta}>
               Categoria: {selected?.categoria?.name ?? "Sem categoria"}
