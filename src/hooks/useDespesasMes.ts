@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import api from "@/src/utils/api";
 import { Alert } from "react-native";
 
-export default function useDespesasMes(userId: string) {
+export default function useDespesasMes(userId: string, refreshKey?: any) {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function useDespesasMes(userId: string) {
     };
 
     fetchDespesas();
-  }, [userId]);
+  }, [userId, refreshKey]);
 
   return total;
 }

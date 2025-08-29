@@ -15,10 +15,11 @@ export default function ActionButtonsRow({ onUpdateData }: { onUpdateData: () =>
     setModalDespesaVisible(false);
   };
 
-  // Funções para fechar os modais e atualizar os dados
-  const closeReceitaModal = () => {
+
+  // Só chama onUpdateData após sucesso real
+  const handleReceitaSuccess = () => {
     setModalReceitaVisible(false);
-    onUpdateData(); // Chama a função de atualização
+    onUpdateData();
   };
 
   const closeDespesaModal = () => {
@@ -40,8 +41,7 @@ export default function ActionButtonsRow({ onUpdateData }: { onUpdateData: () =>
       />
 
       <Modal visible={modalReceitaVisible} animationType="slide">
-        {/* Passando a nova função de fechamento que inclui a atualização */}
-        <CreateReceitaForm onClose={closeReceitaModal} />
+        <CreateReceitaForm onClose={() => setModalReceitaVisible(false)} onSuccess={handleReceitaSuccess} />
       </Modal>
 
       <Modal visible={modalDespesaVisible} animationType="slide">

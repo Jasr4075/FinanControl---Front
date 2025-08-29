@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import useRedirectIfAuth from "@/src/hooks/useRedirectIfAuth";
+import Input from "../../src/components/atoms/Input";
+
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
@@ -46,7 +48,7 @@ export default function ForgotPasswordScreen() {
         senha.
       </Text>
 
-      <TextInput
+      <Input
         placeholder="Digite seu email"
         value={email}
         onChangeText={setEmail}

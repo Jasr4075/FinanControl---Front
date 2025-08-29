@@ -8,9 +8,10 @@ type Cartao = {
   id: string;
   nome: string;
   conta: string;
+  valorFaturaAtual?: number;
 };
 
-export default function CartoesRow() {
+export default function CartoesRow({ refreshKey }: { refreshKey?: any } = {}) {
   const [cartoes, setCartoes] = useState<Cartao[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandido, setExpandido] = useState(false);
@@ -19,7 +20,21 @@ export default function CartoesRow() {
     async function fetchCartoes() {
       try {
         const r = await api.get("/cartoes");
-        setCartoes(r.data.data);
+        const cartoesData = r.data.data;
+        // Para cada cartão, buscar o valor da fatura atual
+        const cartoesComFatura = await Promise.all(
+          cartoesData.map(async (cartao: any) => {
+            try {
+              const fat = await api.get(`/faturas/cartao/${cartao.id}/atual`);
+              return { ...cartao, valorFaturaAtual: Number(fat.data.data?.fatura?.valorTotal) || 0 };
+            } catch {
+              return { ...cartao, valorFaturaAtual: 0 };
+            }
+          })
+        );
+        // Ordena decrescente pelo valor da fatura
+        cartoesComFatura.sort((a, b) => (b.valorFaturaAtual || 0) - (a.valorFaturaAtual || 0));
+        setCartoes(cartoesComFatura);
       } catch (err) {
         console.error("Erro ao buscar cartões:", err);
       } finally {
@@ -27,7 +42,7 @@ export default function CartoesRow() {
       }
     }
     fetchCartoes();
-  }, []);
+  }, [refreshKey]);
 
   if (loading) {
     return <ActivityIndicator size="large" color="#007bff" />;

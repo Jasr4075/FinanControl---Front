@@ -16,11 +16,14 @@ import { getUser } from "@/src/utils/auth";
 import api from "@/src/utils/api";
 import { useCreateReceita } from "@/src/hooks/useCreateReceita";
 import { Conta, Categoria } from "../../types/types";
+import Input from "../atoms/Input";
 
 export default function CreateReceitaForm({
   onClose,
+  onSuccess,
 }: {
   onClose?: () => void;
+  onSuccess?: () => void;
 }) {
   const { createReceita, loading, error, success } = useCreateReceita();
 
@@ -38,8 +41,10 @@ export default function CreateReceitaForm({
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
-    if (success) onClose?.();
-  }, [success, onClose]);
+    if (success) {
+      onSuccess?.();
+    }
+  }, [success, onSuccess]);
   useEffect(() => {
     if (error) Alert.alert("Erro", error.toString());
   }, [error]);
@@ -200,7 +205,7 @@ export default function CreateReceitaForm({
         {/* Descrição */}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Descrição *</Text>
-          <TextInput
+          <Input
             style={styles.input}
             value={description}
             onChangeText={setDescription}
@@ -211,7 +216,7 @@ export default function CreateReceitaForm({
         {/* Quantidade */}
         <View style={styles.formGroup}>
           <Text style={styles.label}>Quantidade *</Text>
-          <TextInput
+          <Input
             style={styles.input}
             value={quantidade}
             onChangeText={setQuantidade}

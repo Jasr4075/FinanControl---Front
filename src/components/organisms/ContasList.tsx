@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -6,29 +6,57 @@ import {
   Modal,
   StyleSheet,
   FlatList,
+  Alert,
 } from "react-native";
 import Card from "../atoms/Card";
 import ContaItem from "../molecules/ContaItem";
 import { Feather } from "@expo/vector-icons";
 import CreateContaForm from "../organisms/CreateContaForm";
-import ContaEditModal from "../molecules/ContaEditModal";
 import { Conta } from "../../types/types";
+import api from "../../utils/api";
 type ContasListProps = {
   contas: Conta[];
-  scrollEnabled?: boolean; // adiciona aqui
+  scrollEnabled?: boolean;
+  onChanged?: () => void; // callback para sinalizar criação/alteração
 };
-export default function ContasList({ contas, scrollEnabled = true }: ContasListProps) {
+export default function ContasList({ contas, scrollEnabled = true, onChanged }: ContasListProps) {
   const [showForm, setShowForm] = useState(false);
   const [selectedConta, setSelectedConta] = useState<Conta | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const contaCompleta: Conta = {
-    ...selectedConta!,
-    cartoes: selectedConta?.cartoes || [],
-  };
+  const [listaContas, setListaContas] = useState<Conta[]>(contas);
 
+  // Atualiza lista local quando prop muda
+  useEffect(() => {
+    setListaContas(contas);
+  }, [contas]);
   const openDetails = (conta: Conta) => {
     setSelectedConta(conta);
     setShowDetailsModal(true);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedConta) return;
+    try {
+      await api.delete(`/contas/${selectedConta.id}`);
+      setListaContas(prev => prev.filter(c => c.id !== selectedConta.id));
+      setShowDetailsModal(false);
+      setSelectedConta(null);
+      Alert.alert('Sucesso', 'Conta excluída.');
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível excluir a conta.');
+    }
+  };
+
+  const confirmDelete = () => {
+    if (!selectedConta) return;
+    Alert.alert(
+      'Confirmar exclusão',
+      `Excluir a conta "${selectedConta.nome}"? Esta ação não pode ser desfeita.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Excluir', style: 'destructive', onPress: handleDelete },
+      ]
+    );
   };
 
   return (
@@ -46,7 +74,7 @@ export default function ContasList({ contas, scrollEnabled = true }: ContasListP
 
       {/* Lista de contas */}
       <FlatList
-        data={contas}
+        data={listaContas}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => openDetails(item)}>
@@ -60,7 +88,10 @@ export default function ContasList({ contas, scrollEnabled = true }: ContasListP
 
       {/* Modal de criação de conta */}
       <Modal visible={showForm} animationType="slide">
-        <CreateContaForm onClose={() => setShowForm(false)} />
+          <CreateContaForm
+            onClose={() => setShowForm(false)}
+            onSuccess={() => { onChanged?.(); }}
+          />
       </Modal>
 
       {/* Modal de detalhes da conta */}
@@ -107,23 +138,27 @@ export default function ContasList({ contas, scrollEnabled = true }: ContasListP
                   </Text>
                 </Text>
 
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={() => alert("Editar conta")}
-                >
-                  <Feather name="edit" size={20} color="#fff" />
-                  <Text style={styles.editButtonText}>Editar Conta</Text>
-                </TouchableOpacity>
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => alert("Editar conta")}
+                  >
+                    <Feather name="edit" size={20} color="#fff" />
+                    <Text style={styles.editButtonText}>Editar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={confirmDelete}
+                  >
+                    <Feather name="trash-2" size={20} color="#fff" />
+                    <Text style={styles.editButtonText}>Excluir</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </View>
         </View>
       </Modal>
-      {/* <ContaEditModal
-        conta={contaCompleta}
-        visible={!!selectedConta}
-        onClose={() => setSelectedConta(null)}
-      /> */}
     </Card>
   );
 }
@@ -190,5 +225,21 @@ const styles = StyleSheet.create({
     marginTop: 15,
     justifyContent: "center",
   },
+  deleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#dc3545",
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 15,
+    justifyContent: "center",
+    marginLeft: 10,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   editButtonText: { color: "#fff", fontWeight: "bold", marginLeft: 8 },
 });
+
+// (funções de ação estão dentro do componente)

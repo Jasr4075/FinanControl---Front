@@ -7,6 +7,8 @@ import {
   Modal,
 } from "react-native";
 import { useState } from "react";
+import { Alert } from "react-native";
+import api from "../../utils/api";
 import { MaterialIcons } from "@expo/vector-icons";
 import Card from "../atoms/Card";
 import Valor from "../atoms/Valor";
@@ -18,13 +20,38 @@ const ITEMS_PER_LOAD = 10;
 export default function MovimentacoesList({
   movimentacoes,
   scrollEnabled = true,
+  onChanged,
 }: {
   movimentacoes: Movimentacao[];
-    scrollEnabled?: boolean;
-
+  scrollEnabled?: boolean;
+  onChanged?: () => void;
 }) {
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [selected, setSelected] = useState<Movimentacao | null>(null);
+  const [editando, setEditando] = useState(false);
+  // Excluir movimentação
+  const handleDelete = async () => {
+    if (!selected) return;
+    Alert.alert(
+      'Excluir',
+      `Deseja realmente excluir esta ${selected.tipo.toLowerCase()}?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir', style: 'destructive', onPress: async () => {
+            try {
+              const rota = selected.tipo === 'Receita' ? '/receitas/' : '/despesas/';
+              await api.delete(rota + selected.id);
+              setSelected(null);
+              onChanged?.();
+            } catch (e) {
+              Alert.alert('Erro', 'Não foi possível excluir.');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const handleShowMore = () => setVisibleCount((prev) => prev + ITEMS_PER_LOAD);
   const handleHide = () => setVisibleCount(INITIAL_COUNT);
@@ -124,10 +151,7 @@ export default function MovimentacoesList({
               Valor: R$ {selected?.valor.toFixed(2)}
             </Text>
             <Text style={styles.meta}>
-              Data:{" "}
-              {selected?.data
-                ? new Date(selected.data).toLocaleDateString("pt-BR")
-                : ""}
+              Data: {selected?.data ? new Date(selected.data).toLocaleDateString("pt-BR") : ""}
             </Text>
             <Text style={styles.meta}>Método: {selected?.metodoPagamento}</Text>
             <Text style={styles.meta}>
@@ -136,15 +160,27 @@ export default function MovimentacoesList({
             <Text style={styles.meta}>
               Categoria: {selected?.categoria?.name ?? "Sem categoria"}
             </Text>
-
             {selected?.cartao?.name && (
               <Text style={styles.meta}>Cartão: {selected?.cartao?.name}</Text>
             )}
 
-            <TouchableOpacity onPress={() => setSelected(null)}>
-              <Text
-                style={{ color: "red", marginTop: 20, textAlign: "center" }}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 18 }}>
+              <TouchableOpacity
+                style={{ backgroundColor: '#28a745', padding: 10, borderRadius: 8, flex: 1, marginRight: 8 }}
+                onPress={() => setEditando(true)}
               >
+                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Editar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ backgroundColor: '#dc3545', padding: 10, borderRadius: 8, flex: 1, marginLeft: 8 }}
+                onPress={handleDelete}
+              >
+                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Excluir</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity onPress={() => setSelected(null)}>
+              <Text style={{ color: "#007AFF", marginTop: 20, textAlign: "center" }}>
                 Fechar
               </Text>
             </TouchableOpacity>

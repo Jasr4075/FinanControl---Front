@@ -7,10 +7,12 @@ export default function ResumoFinanceiro({
   saldo,
   receitas,
   despesas,
+  cartoesRefreshKey,
 }: {
   saldo: number;
   receitas: number;
   despesas: number;
+  cartoesRefreshKey?: any;
 }) {
   return (
     <View style={styles.container}>
@@ -20,7 +22,7 @@ export default function ResumoFinanceiro({
         despesas={despesas}
         faturasBanco={0}
       />
-      <CartoesRow />
+      <CartoesRow refreshKey={cartoesRefreshKey} />
     </View>
   );
 }

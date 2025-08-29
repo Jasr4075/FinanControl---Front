@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Conta, Categoria } from "../../types/types";
+import Input from "../atoms/Input";
 
 interface Props {
   contaId?: string;
@@ -212,6 +213,7 @@ export default function CreateDespesaForm({
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar conta"
+            placeholderTextColor="#999"
             value={searchConta}
             onChangeText={setSearchConta}
           />
@@ -287,6 +289,7 @@ export default function CreateDespesaForm({
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar categoria"
+            placeholderTextColor="#999"
             value={searchCategoria}
             onChangeText={setSearchCategoria}
           />
@@ -319,7 +322,7 @@ export default function CreateDespesaForm({
 
         {/* Descrição */}
         <Text style={styles.label}>Descrição *</Text>
-        <TextInput
+        <Input
           style={styles.input}
           placeholder="Descrição da despesa"
           value={descricao}
@@ -328,7 +331,7 @@ export default function CreateDespesaForm({
 
         {/* Valor */}
         <Text style={styles.label}>Valor *</Text>
-        <TextInput
+        <Input
           style={styles.input}
           placeholder="Valor"
           keyboardType="numeric"

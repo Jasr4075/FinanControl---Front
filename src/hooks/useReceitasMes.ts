@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import api from "@/src/utils/api";
 import { Alert } from "react-native";
 
-export default function useReceitasMes(userId: string) {
+export default function useReceitasMes(userId: string, refreshKey?: any) {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function useReceitasMes(userId: string) {
     };
 
     fetchReceitas();
-  }, [userId]);
+  }, [userId, refreshKey]);
 
   return total;
 }

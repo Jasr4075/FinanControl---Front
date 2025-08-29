@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
@@ -11,13 +10,16 @@ import {
   Platform,
   Switch,
 } from "react-native";
+import Input from "../atoms/Input";
 import { Feather } from "@expo/vector-icons";
 import api from "@/src/utils/api";
 import { Conta } from "../../types/types";
+import { getUser } from "@/src/utils/auth";
 
 interface Props {
   conta?: Conta | null;
-  onClose: () => void;
+  onClose: () => void;            // fechar sem acionar refresh
+  onSuccess?: () => void;         // chamado somente após criação bem sucedida
 }
 
 const tiposConta = [
@@ -55,7 +57,7 @@ const bancosPopulares = [
   "Banco Modal Mais",
 ];
 
-export default function CreateContaForm({ onClose }: Props) {
+export default function CreateContaForm({ onClose, onSuccess }: Props) {
   const [bancoNome, setBancoNome] = useState("");
   const [agencia, setAgencia] = useState("");
   const [conta, setConta] = useState("");
@@ -81,8 +83,7 @@ export default function CreateContaForm({ onClose }: Props) {
 
   const handleCreate = async () => {
     try {
-      const userRaw = localStorage.getItem("user");
-      const user = userRaw ? JSON.parse(userRaw) : null;
+      const user = await getUser();
 
       if (!user?.id) {
         Alert.alert("Erro", "Usuário não encontrado no localStorage");
@@ -100,7 +101,7 @@ export default function CreateContaForm({ onClose }: Props) {
         bancoNome,
         agencia,
         conta,
-        saldo: parseFloat(saldo),
+        saldo: saldo ? parseFloat(saldo) : 0,
         efetivo: false,
         cdiPercent: 0.0,
       });
@@ -141,10 +142,12 @@ export default function CreateContaForm({ onClose }: Props) {
           criarCartao ? (cartaoCriadoId ? " + cartão" : " (cartão falhou)") : ""
         }!`
       );
+      // Dispara callback de sucesso (para refresh) e depois fecha modal
+      onSuccess?.();
       onClose();
     } catch (error) {
       console.error(error);
-      Alert.alert("Erro", "Não foi possível criar a conta");
+      Alert.alert("Erro", "Não foi possível criar a conta\n" + ((error as any)?.message || ""));
     }
   };
 
@@ -158,8 +161,7 @@ export default function CreateContaForm({ onClose }: Props) {
 
         {/* Banco */}
         <Text style={styles.label}>Banco *</Text>
-        <TextInput
-          style={styles.input}
+        <Input
           placeholder="Nome do Banco"
           value={bancoNome}
           onChangeText={setBancoNome}
@@ -191,22 +193,19 @@ export default function CreateContaForm({ onClose }: Props) {
           ))}
         </ScrollView>
 
-        <TextInput
-          style={styles.input}
+        <Input
           placeholder="Agência"
           value={agencia}
           onChangeText={setAgencia}
         />
 
-        <TextInput
-          style={styles.input}
+        <Input
           placeholder="Conta"
           value={conta}
           onChangeText={setConta}
         />
 
-        <TextInput
-          style={styles.input}
+        <Input
           placeholder="Saldo Inicial"
           keyboardType="numeric"
           value={saldo}
@@ -252,8 +251,7 @@ export default function CreateContaForm({ onClose }: Props) {
             <Text style={styles.subSectionTitle}>Dados do Cartão</Text>
 
             {/* Nome do cartão */}
-            <TextInput
-              style={styles.input}
+            <Input
               placeholder="Nome do Cartão (ex: Visa Gold)"
               value={cartaoNome}
               onChangeText={setCartaoNome}
@@ -332,8 +330,7 @@ export default function CreateContaForm({ onClose }: Props) {
             {/* Campos específicos para crédito/misto */}
             {(cartaoTipo === "CREDITO" || cartaoTipo === "MISTO") && (
               <>
-                <TextInput
-                  style={styles.input}
+                <Input
                   placeholder="Limite de Crédito"
                   keyboardType="numeric"
                   value={creditLimit}
@@ -341,15 +338,15 @@ export default function CreateContaForm({ onClose }: Props) {
                 />
 
                 <View style={styles.inlineRow}>
-                  <TextInput
-                    style={[styles.input, { flex: 1, marginRight: 6 }]}
+                  <Input
+                    style={{ flex: 1, marginRight: 6 }}
                     placeholder="Fechamento (1-28)"
                     keyboardType="numeric"
                     value={closingDay}
                     onChangeText={setClosingDay}
                   />
-                  <TextInput
-                    style={[styles.input, { flex: 1, marginLeft: 6 }]}
+                  <Input
+                    style={{ flex: 1, marginLeft: 6 }}
                     placeholder="Vencimento (1-28)"
                     keyboardType="numeric"
                     value={dueDay}
@@ -369,8 +366,7 @@ export default function CreateContaForm({ onClose }: Props) {
                 </View>
 
                 {hasCashback && (
-                  <TextInput
-                    style={styles.input}
+                  <Input
                     placeholder="% Cashback (0-100)"
                     keyboardType="numeric"
                     value={cashbackPercent}
