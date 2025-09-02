@@ -25,7 +25,17 @@ api.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       await deleteToken();
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+      }
       router.replace("/login"); // força redirecionar pro login
+    } else if (error.response) {
+      // Para outros erros, também limpar e redirecionar se necessário
+      await deleteToken();
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+      }
+      router.replace("/login");
     }
     return Promise.reject(error);
   }

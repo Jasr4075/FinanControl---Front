@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Modal, StyleSheet, View } from "react-native";
 import { useCreateDespesa } from "../../hooks/useCreateDespesa";
+import { CreateDespesaInput } from "../../types/types";
 import ActionButton from "../atoms/ActionButton";
 import CreateDespesaForm from "../molecules/CreateDespesaForm";
 import CreateReceitaForm from "../molecules/CreateReceitaForm";
@@ -10,7 +11,7 @@ export default function ActionButtonsRow({ onUpdateData }: { onUpdateData: () =>
   const [modalReceitaVisible, setModalReceitaVisible] = useState(false);
   const { createDespesa, loading } = useCreateDespesa();
 
-  const handleCreateDespesa = async (data: any) => {
+  const handleCreateDespesa = async (data: CreateDespesaInput) => {
     await createDespesa(data);
     setModalDespesaVisible(false);
   };
@@ -48,8 +49,8 @@ export default function ActionButtonsRow({ onUpdateData }: { onUpdateData: () =>
         {/* Passando a nova função de fechamento que inclui a atualização */}
         <CreateDespesaForm
           onClose={closeDespesaModal}
-          onSubmit={handleCreateDespesa as any}
-          loading={loading as any}
+          onSubmit={handleCreateDespesa}
+          loading={loading}
         />
       </Modal>
     </View>

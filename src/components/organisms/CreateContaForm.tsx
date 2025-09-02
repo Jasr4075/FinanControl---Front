@@ -127,12 +127,10 @@ export default function CreateContaForm({ onClose, onSuccess }: Props) {
             dueDay: parseInt(dueDay, 10),
           });
           cartaoCriadoId = "ok";
-        } catch (e: any) {
-          console.error("Erro ao criar cartão vinculado", e);
-          Alert.alert(
-            "Aviso",
-            "Conta criada, mas falhou ao criar cartão: " + (e?.message || "")
-          );
+        } catch (e) {
+          let message = "Conta criada, mas falhou ao criar cartão.";
+          if (e instanceof Error) message += `\n${e.message}`;
+          Alert.alert("Aviso", message);
         }
       }
 
@@ -146,8 +144,9 @@ export default function CreateContaForm({ onClose, onSuccess }: Props) {
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error(error);
-      Alert.alert("Erro", "Não foi possível criar a conta\n" + ((error as any)?.message || ""));
+      let message = "Não foi possível criar a conta.";
+      if (error instanceof Error) message += `\n${error.message}`;
+      Alert.alert("Erro", message);
     }
   };
 

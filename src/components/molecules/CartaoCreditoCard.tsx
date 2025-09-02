@@ -98,7 +98,7 @@ export default function CartaoCreditoCard({ cartaoId }: { cartaoId: string }) {
         const r = await api.get(`/cartoes/${cartaoId}/resumo`);
         if (mounted) setResumo(normalizeResumo(r.data.data));
       } catch (e) {
-        console.error("Resumo cartão erro", e);
+        // Em produção, não exibir detalhes técnicos para o usuário
       } finally {
         mounted = false;
         setLoadingResumo(false);
@@ -141,7 +141,7 @@ export default function CartaoCreditoCard({ cartaoId }: { cartaoId: string }) {
       setMes(det.fatura.mes);
       setAno(det.fatura.ano);
     } catch (e) {
-      console.error("Fatura atual erro", e);
+      // Em produção, não exibir detalhes técnicos para o usuário
     } finally {
       setLoadingFatura(false);
     }
@@ -176,7 +176,7 @@ export default function CartaoCreditoCard({ cartaoId }: { cartaoId: string }) {
         setMes(m);
         setAno(a);
       } catch (e) {
-        console.error("Fatura mês erro", e);
+        // Em produção, não exibir detalhes técnicos para o usuário
       } finally {
         setLoadingFatura(false);
       }

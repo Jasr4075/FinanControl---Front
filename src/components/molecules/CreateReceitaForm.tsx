@@ -15,7 +15,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { getUser } from "@/src/utils/auth";
 import api from "@/src/utils/api";
 import { useCreateReceita } from "@/src/hooks/useCreateReceita";
-import { Conta, Categoria } from "../../types/types";
+import { Conta, Categoria, CreateReceitaInput } from "../../types/types";
 import Input from "../atoms/Input";
 
 export default function CreateReceitaForm({
@@ -88,14 +88,15 @@ export default function CreateReceitaForm({
       return Alert.alert("Atenção", "Preencha todos os campos obrigatórios!");
     }
 
-    await createReceita({
+    const payload: CreateReceitaInput = {
       userId: user.id,
       accountId,
       categoryId,
       description,
       quantidade: Number(quantidade),
       data: date.toISOString().split("T")[0],
-    } as any);
+    };
+    await createReceita(payload);
   };
 
   const categoriasFiltradas = categorias.filter((cat) =>

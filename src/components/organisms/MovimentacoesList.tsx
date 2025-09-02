@@ -17,15 +17,13 @@ import { Movimentacao } from "../../types/types";
 const INITIAL_COUNT = 5;
 const ITEMS_PER_LOAD = 10;
 
-export default function MovimentacoesList({
-  movimentacoes,
-  scrollEnabled = true,
-  onChanged,
-}: {
+interface MovimentacoesListProps {
   movimentacoes: Movimentacao[];
   scrollEnabled?: boolean;
   onChanged?: () => void;
-}) {
+}
+
+export default function MovimentacoesList({ movimentacoes, scrollEnabled = true, onChanged }: MovimentacoesListProps) {
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [selected, setSelected] = useState<Movimentacao | null>(null);
   const [editando, setEditando] = useState(false);
@@ -45,7 +43,9 @@ export default function MovimentacoesList({
               setSelected(null);
               onChanged?.();
             } catch (e) {
-              Alert.alert('Erro', 'Não foi possível excluir.');
+              let message = 'Não foi possível excluir.';
+              if (e instanceof Error) message += `\n${e.message}`;
+              Alert.alert('Erro', message);
             }
           }
         }

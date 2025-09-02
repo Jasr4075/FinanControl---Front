@@ -36,7 +36,7 @@ export default function CartoesRow({ refreshKey }: { refreshKey?: any } = {}) {
         cartoesComFatura.sort((a, b) => (b.valorFaturaAtual || 0) - (a.valorFaturaAtual || 0));
         setCartoes(cartoesComFatura);
       } catch (err) {
-        console.error("Erro ao buscar cartões:", err);
+        // Em produção, não exibir detalhes técnicos para o usuário
       } finally {
         setLoading(false);
       }

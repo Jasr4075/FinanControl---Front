@@ -1,9 +1,15 @@
 import { Text, StyleSheet } from "react-native";
 
-export default function Valor({ valor, tipo }: { valor: number; tipo: "Receita" | "Despesa" }) {
+interface ValorProps {
+  valor: number;
+  tipo: "Receita" | "Despesa";
+}
+
+export default function Valor({ valor, tipo }: ValorProps) {
+  const safeValor = isNaN(valor) ? 0 : valor;
   return (
     <Text style={tipo === "Receita" ? styles.receita : styles.despesa}>
-      {tipo === "Receita" ? "+" : "-"} R$ {valor.toFixed(2)}
+      {tipo === "Receita" ? "+" : "-"} R$ {safeValor.toFixed(2)}
     </Text>
   );
 }

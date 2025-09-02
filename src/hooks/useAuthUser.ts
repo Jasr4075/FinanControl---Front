@@ -31,10 +31,14 @@ export default function useAuthUser(): UseAuthUserReturn {
           await clearAuth();
         }
       }
-    } catch (e: any) {
-      setError(e?.message || "Falha ao carregar usuário");
+    } catch (e) {
+      let message = "Falha ao carregar usuário";
+      if (e instanceof Error) message = e.message;
+      setError(message);
       setUser(null);
       setIsValid(false);
+      await clearAuth();
+      router.replace("/login");
     } finally {
       setLoading(false);
     }
@@ -52,8 +56,12 @@ export default function useAuthUser(): UseAuthUserReturn {
       setIsValid(false);
       setError(null);
       router.replace("/login");
-    } catch (e: any) {
-      setError(e?.message || "Erro ao fazer logout");
+    } catch (e) {
+      let message = "Erro ao fazer logout";
+      if (e instanceof Error) message = e.message;
+      setError(message);
+      await clearAuth();
+      router.replace("/login");
     } finally {
       setLoading(false);
     }

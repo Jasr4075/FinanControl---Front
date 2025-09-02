@@ -43,7 +43,9 @@ export default function ContasList({ contas, scrollEnabled = true, onChanged }: 
       setSelectedConta(null);
       Alert.alert('Sucesso', 'Conta excluída.');
     } catch (e) {
-      Alert.alert('Erro', 'Não foi possível excluir a conta.');
+      let message = 'Não foi possível excluir a conta.';
+      if (e instanceof Error) message += `\n${e.message}`;
+      Alert.alert('Erro', message);
     }
   };
 

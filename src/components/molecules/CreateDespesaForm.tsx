@@ -15,14 +15,14 @@ import {
   View,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Conta, Categoria } from "../../types/types";
+import { Conta, Categoria, CreateDespesaInput } from "../../types/types";
 import Input from "../atoms/Input";
 
 interface Props {
   contaId?: string;
   cartaoId?: string;
   onClose?: () => void;
-  onSubmit?: (data: any) => Promise<void>;
+  onSubmit?: (data: CreateDespesaInput) => Promise<void>;
   loading?: boolean;
 }
 
@@ -150,26 +150,28 @@ export default function CreateDespesaForm({
       return Alert.alert("Atenção", "Preencha todos os campos obrigatórios!");
 
     const isCredito = metodoPagamento === "CREDITO";
-    const payload = {
+    const payload: CreateDespesaInput = {
       userId: user.id,
       contaId: contaSelecionada,
       cartaoId: cartaoSelecionado || undefined,
       categoryId,
       descricao,
       valor: Number(valor),
-      metodoPagamento,
+      metodoPagamento: metodoPagamento as "PIX" | "DINHEIRO" | "CREDITO" | "DEBITO",
       data: date.toISOString().split("T")[0],
       ...(isCredito && { parcelado: true, numeroParcelas: Number(parcelas) }),
     };
 
     try {
       if (onSubmit) await onSubmit(payload);
-      else await createDespesa(payload as any);
+      else await createDespesa(payload);
       Alert.alert("Sucesso!", "Despesa criada com sucesso!", [
         { text: "OK", onPress: onClose },
       ]);
-    } catch {
-      Alert.alert("Erro", "Não foi possível criar a despesa. Tente novamente.");
+    } catch (e) {
+      let message = "Não foi possível criar a despesa. Tente novamente.";
+      if (e instanceof Error) message += `\n${e.message}`;
+      Alert.alert("Erro", message);
     }
   };
 

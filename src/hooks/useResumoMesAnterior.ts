@@ -29,8 +29,9 @@ export function useTotaisReceitas(userId: string) : TotaisMes {
             anterior: anteriorResp.data?.total || 0,
         })
       } catch (e) {
-        console.error(e)
-        if (!cancel) Alert.alert('Erro', 'Falha ao carregar totais de receitas.')
+        let message = 'Falha ao carregar totais de receitas.';
+        if (e instanceof Error) message += `\n${e.message}`;
+        if (!cancel) Alert.alert('Erro', message);
       }
     }
     load()
@@ -60,8 +61,9 @@ export function useTotaisDespesas(userId: string) : TotaisMes {
           anterior: anteriorResp.data?.total || 0,
         })
       } catch (e) {
-        console.error(e)
-        if (!cancel) Alert.alert('Erro', 'Falha ao carregar totais de despesas.')
+        let message = 'Falha ao carregar totais de despesas.';
+        if (e instanceof Error) message += `\n${e.message}`;
+        if (!cancel) Alert.alert('Erro', message);
       }
     }
     load()

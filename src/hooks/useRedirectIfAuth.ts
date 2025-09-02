@@ -50,11 +50,10 @@ export default function useRedirectIfAuth(options: UseRedirectIfAuthOptions = {}
         }
       } catch (err) {
         if (!isMounted) return;
-
-        console.error("Erro ao verificar autenticação:", err);
-        setError("Erro ao verificar autenticação");
+        let message = "Erro ao verificar autenticação";
+        if (err instanceof Error) message += `: ${err.message}`;
+        setError(message);
         setLoading(false);
-
         if (onStay) onStay();
       }
     }

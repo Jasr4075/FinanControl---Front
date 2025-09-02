@@ -30,7 +30,8 @@ export function useUltimasDespesas() {
           setMovimentacoes(data);
         }
       } catch (e) {
-        console.error("Erro ao carregar últimas despesas", e);
+        // Em produção, não exibir detalhes técnicos para o usuário
+        // Aqui poderia ser enviado para um serviço de log remoto se necessário
       } finally {
         setLoading(false);
       }

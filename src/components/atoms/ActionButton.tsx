@@ -1,21 +1,18 @@
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { Link } from "expo-router";
 
-export default function ActionButton({
-  href,
-  label,
-  color,
-  onPress,
-}: {
-  href?: string;
+interface ActionButtonProps {
+  href?: Parameters<typeof Link>[0]["href"];
   label: string;
   color: string;
   onPress?: () => void;
-}) {
+}
+
+export default function ActionButton({ href, label, color, onPress }: ActionButtonProps) {
   if (href) {
     return (
-      <TouchableOpacity style={[styles.button, { backgroundColor: color }]}>
-        <Link href={href as any} style={styles.text}>
+      <TouchableOpacity style={[styles.button, { backgroundColor: color }]}> 
+        <Link href={href} style={styles.text}>
           {label}
         </Link>
       </TouchableOpacity>

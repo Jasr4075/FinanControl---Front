@@ -14,7 +14,7 @@ async function cleanupCorruptedData() {
     const looksInvalidJSON = !raw.startsWith('{') && !raw.startsWith('[')
     if (looksPlain || looksInvalidJSON) {
       localStorage.removeItem(USER_KEY)
-      console.log('[auth] Removido user corrompido (forma inválida)')
+  // Removido log de produção
       return
     }
     // tenta parsear para confirmar
@@ -22,10 +22,10 @@ async function cleanupCorruptedData() {
       JSON.parse(raw)
     } catch {
       localStorage.removeItem(USER_KEY)
-      console.log('[auth] Removido user corrompido (JSON parse falhou)')
+  // Removido log de produção
     }
   } catch (e) {
-    console.error('[auth] Erro ao limpar dados corrompidos:', e)
+  // Removido log de produção
   }
 }
 
@@ -62,7 +62,7 @@ export async function saveUser(user: object) {
   }
 }
 
-export async function getUser(): Promise<any | null> {
+export async function getUser<T = any>(): Promise<T | null> {
   let raw: string | null =
     Platform.OS === "web"
       ? localStorage.getItem(USER_KEY)
@@ -74,7 +74,7 @@ export async function getUser(): Promise<any | null> {
     await clearAuth();
     return null;
   }
-  try { return JSON.parse(raw); }
+  try { return JSON.parse(raw) as T; }
   catch {
     await clearAuth();
     return null;
