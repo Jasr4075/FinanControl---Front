@@ -23,14 +23,14 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    const isLogin = error.config?.url?.includes("/auth/login");
+    if (!isLogin && error.response?.status === 401) {
       await deleteToken();
       if (typeof window !== 'undefined') {
         localStorage.clear();
       }
-      router.replace("/login"); // força redirecionar pro login
-    } else if (error.response) {
-      // Para outros erros, também limpar e redirecionar se necessário
+      router.replace("/login");
+    } else if (!isLogin && error.response) {
       await deleteToken();
       if (typeof window !== 'undefined') {
         localStorage.clear();

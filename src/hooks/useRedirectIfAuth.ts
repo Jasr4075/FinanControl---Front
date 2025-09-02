@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { isAuthenticated, validateToken, getUser } from "@/src/utils/auth";
+import { isAuthenticated, validateToken, getUser, clearAuth } from "@/src/utils/auth";
 import { ValidRedirectPaths, UseRedirectIfAuthOptions } from "../types/types";
 
 export default function useRedirectIfAuth(options: UseRedirectIfAuthOptions = {}) {
@@ -44,6 +44,11 @@ export default function useRedirectIfAuth(options: UseRedirectIfAuthOptions = {}
           if (authenticated && !tokenValid) {
             console.warn("Token inválido ou expirado");
             setError("Sessão expirada");
+            await clearAuth();
+            if (isMounted) {
+              router.replace("/login");
+            }
+            return;
           }
 
           if (isMounted) setLoading(false);
@@ -53,6 +58,8 @@ export default function useRedirectIfAuth(options: UseRedirectIfAuthOptions = {}
         let message = "Erro ao verificar autenticação";
         if (err instanceof Error) message += `: ${err.message}`;
         setError(message);
+        await clearAuth();
+        router.replace("/login");
         setLoading(false);
         if (onStay) onStay();
       }

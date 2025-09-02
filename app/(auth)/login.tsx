@@ -20,9 +20,9 @@ export default function LoginScreen() {
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<{ username?: string; senha?: string }>({});
+  // Novo estado para erro geral de autenticação
+  const [error, setError] = useState<{ username?: string; senha?: string; auth?: string }>({});
   const loadingAuth = useRedirectIfAuth();
-
 
   async function handleLogin() {
     let newErrors: typeof error = {};
@@ -31,6 +31,7 @@ export default function LoginScreen() {
 
     if (Object.keys(newErrors).length > 0) {
       setError(newErrors);
+      
       return;
     }
 
@@ -42,7 +43,6 @@ export default function LoginScreen() {
         username: username.trim(), 
         senha: senha.trim() 
       });
-      
       const data = response.data;
 
       if (data.token && data.user) {
@@ -50,7 +50,6 @@ export default function LoginScreen() {
           saveToken(data.token),
           saveUser(data.user)
         ]);
-        
         router.replace("/(dashboard)/home");
       } else if (data.erro) {
         setError({ senha: data.erro });
@@ -58,9 +57,10 @@ export default function LoginScreen() {
         setError({ senha: "Resposta inválida do servidor" });
       }
     } catch (err: any) {
-      console.error('Erro no login:', err);
-      
-      if (err.response?.data?.erro) {
+      // Se for 401, mostra mensagem amigável
+      if (err.response?.status === 401) {
+        setError({ auth: "E-mail ou senha incorretos." });
+      } else if (err.response?.data?.erro) {
         setError({ senha: err.response.data.erro });
       } else if (err.message === 'Network Error') {
         setError({ senha: "Sem conexão com o servidor" });
@@ -77,7 +77,7 @@ export default function LoginScreen() {
       <Text style={styles.title}>FinanControl</Text>
 
       {/* Campo Usuário */}
-      <View style={[styles.inputWrapper, error.username && styles.inputError]}>
+  <View style={[styles.inputWrapper, error.username && styles.inputError]}>
         <Feather name="user" size={20} color="#666" style={styles.icon} />
         <TextInput
           style={styles.input}
@@ -86,7 +86,8 @@ export default function LoginScreen() {
           value={username}
           onChangeText={(text) => {
             setUsername(text);
-            if (error.username) setError({ ...error, username: undefined });
+            // Limpa todos os erros ao digitar
+            if (Object.keys(error).length > 0) setError({});
           }}
           autoCapitalize="none"
           returnKeyType="next"
@@ -96,7 +97,7 @@ export default function LoginScreen() {
       {error.username && <Text style={styles.errorText}>{error.username}</Text>}
 
       {/* Campo Senha */}
-      <View style={[styles.inputWrapper, error.senha && styles.inputError]}>
+  <View style={[styles.inputWrapper, error.senha && styles.inputError]}>
         <Feather name="lock" size={20} color="#666" style={styles.icon} />
         <TextInput
           style={styles.input}
@@ -105,7 +106,8 @@ export default function LoginScreen() {
           value={senha}
           onChangeText={(text) => {
             setSenha(text);
-            if (error.senha) setError({ ...error, senha: undefined });
+            // Limpa todos os erros ao digitar
+            if (Object.keys(error).length > 0) setError({});
           }}
           secureTextEntry={!showPassword}
           returnKeyType="done"
@@ -123,7 +125,9 @@ export default function LoginScreen() {
           />
         </TouchableOpacity>
       </View>
-      {error.senha && <Text style={styles.errorText}>{error.senha}</Text>}
+  {error.senha && <Text style={styles.errorText}>{error.senha}</Text>}
+  {/* Mensagem de erro de autenticação (senha/email incorretos) */}
+  {error.auth && <Text style={styles.errorText}>{error.auth}</Text>}
 
       {/* Botão Login */}
       <TouchableOpacity
