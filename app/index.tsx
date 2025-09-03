@@ -6,7 +6,7 @@ export default function Index() {
   return (
     <View style={styles.container}>
       {/* Futuro espaço para logo */}
-      <Text style={styles.title}>FinanControl</Text>
+      <Text style={styles.title}>My Control</Text>
       <Text style={styles.subtitle}>
         Controle suas finanças de forma simples, clara e inteligente
       </Text>

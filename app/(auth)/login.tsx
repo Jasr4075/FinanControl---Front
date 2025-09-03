@@ -31,7 +31,7 @@ export default function LoginScreen() {
 
     if (Object.keys(newErrors).length > 0) {
       setError(newErrors);
-      
+
       return;
     }
 
@@ -74,7 +74,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>FinanControl</Text>
+      <Text style={styles.title}>My control</Text>
 
       {/* Campo Usuário */}
   <View style={[styles.inputWrapper, error.username && styles.inputError]}>

@@ -1,19 +1,12 @@
 import { useState, useEffect } from "react";
-import {
-  Text,
-  TouchableOpacity,
-  View,
-  Modal,
-  StyleSheet,
-  FlatList,
-  Alert,
-} from "react-native";
+import { Text, TouchableOpacity, View, Modal, StyleSheet, FlatList, Alert } from "react-native";
 import Card from "../atoms/Card";
 import ContaItem from "../molecules/ContaItem";
 import { Feather } from "@expo/vector-icons";
 import CreateContaForm from "../organisms/CreateContaForm";
 import { Conta } from "../../types/types";
 import api from "../../utils/api";
+import AddCartaoToContaForm from "../organisms/AddCartaoToContaForm";
 type ContasListProps = {
   contas: Conta[];
   scrollEnabled?: boolean;
@@ -24,7 +17,7 @@ export default function ContasList({ contas, scrollEnabled = true, onChanged }: 
   const [selectedConta, setSelectedConta] = useState<Conta | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [listaContas, setListaContas] = useState<Conta[]>(contas);
-
+  const [showAddCartaoModal, setShowAddCartaoModal] = useState(false);
   // Atualiza lista local quando prop muda
   useEffect(() => {
     setListaContas(contas);
@@ -143,6 +136,13 @@ export default function ContasList({ contas, scrollEnabled = true, onChanged }: 
                 <View style={styles.actionRow}>
                   <TouchableOpacity
                     style={styles.editButton}
+                    onPress={() => setShowAddCartaoModal(true)}
+                  >
+                    <Feather name="credit-card" size={20} color="#fff" />
+                    <Text style={styles.editButtonText}>Adicionar Cartão</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.editButton}
                     onPress={() => alert("Editar conta")}
                   >
                     <Feather name="edit" size={20} color="#fff" />
@@ -157,6 +157,24 @@ export default function ContasList({ contas, scrollEnabled = true, onChanged }: 
                   </TouchableOpacity>
                 </View>
               </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal para adicionar cartão à conta */}
+      <Modal visible={showAddCartaoModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {selectedConta && (
+              <AddCartaoToContaForm
+                contaId={selectedConta.id}
+                onSuccess={() => {
+                  setShowAddCartaoModal(false);
+                  onChanged?.();
+                }}
+                onClose={() => setShowAddCartaoModal(false)}
+              />
             )}
           </View>
         </View>
