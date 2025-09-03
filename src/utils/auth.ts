@@ -2,6 +2,7 @@ import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
 const TOKEN_KEY = "userToken";
+const REFRESH_TOKEN_KEY = "refreshToken";
 const USER_KEY = "user";
 
 // 🔹 Apenas web precisa dessa limpeza
@@ -31,6 +32,7 @@ async function cleanupCorruptedData() {
 
 cleanupCorruptedData()
 
+
 export async function saveToken(token: string) {
   if (Platform.OS === "web") {
     localStorage.setItem(TOKEN_KEY, token);
@@ -39,17 +41,41 @@ export async function saveToken(token: string) {
   }
 }
 
+export async function saveRefreshToken(refreshToken: string) {
+  if (Platform.OS === "web") {
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  } else {
+    await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
+  }
+}
+
+
 export async function getToken(): Promise<string | null> {
   return Platform.OS === "web"
     ? localStorage.getItem(TOKEN_KEY)
     : await SecureStore.getItemAsync(TOKEN_KEY);
 }
 
+export async function getRefreshToken(): Promise<string | null> {
+  return Platform.OS === "web"
+    ? localStorage.getItem(REFRESH_TOKEN_KEY)
+    : await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+}
+
+
 export async function deleteToken() {
   if (Platform.OS === "web") {
     localStorage.removeItem(TOKEN_KEY);
   } else {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
+  }
+}
+
+export async function deleteRefreshToken() {
+  if (Platform.OS === "web") {
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  } else {
+    await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
   }
 }
 
@@ -81,8 +107,10 @@ export async function getUser<T = any>(): Promise<T | null> {
   }
 }
 
+
 export async function clearAuth() {
   await deleteToken();
+  await deleteRefreshToken();
   if (Platform.OS === "web") {
     localStorage.removeItem(USER_KEY);
   } else {
