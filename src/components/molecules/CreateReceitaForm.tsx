@@ -131,6 +131,7 @@ export default function CreateReceitaForm({
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar conta"
+            placeholderTextColor="#999"
             value={searchConta}
             onChangeText={setSearchConta}
           />
@@ -173,6 +174,7 @@ export default function CreateReceitaForm({
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar categoria"
+            placeholderTextColor="#999"
             value={searchCategoria}
             onChangeText={setSearchCategoria}
           />

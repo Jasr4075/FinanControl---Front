@@ -247,82 +247,105 @@ export default function CartaoCreditoCard({ cartaoId }: { cartaoId: string }) {
       </Card>
 
       <Modal
-        visible={modalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {loadingFatura && !detalhe && (
-              <ActivityIndicator size="large" color="#4a90e2" />
-            )}
-            {detalhe && (
-              <>
-                <Text style={styles.modalTitle}>
-                  Fatura {mes}/{ano}
-                </Text>
-                <Text style={styles.resumo}>
-                  Total: {currency(Number(detalhe.fatura.valorTotal))} | Pago:{" "}
-                  {currency(Number(detalhe.fatura.valorPago))} | Restante:{" "}
-                  {currency(detalhe.resumo.restante)} (
-                  {pct(detalhe.resumo.percentPago)})
-                </Text>
-
-                <FlatList
-                  data={detalhe.fatura.parcelas}
-                  keyExtractor={(p) => p.id}
-                  style={{ maxHeight: 300, marginBottom: 12 }}
-                  ListEmptyComponent={
-                    <Text style={{ textAlign: "center", color: "#666" }}>
-                      Sem parcelas
-                    </Text>
-                  }
-                  renderItem={({ item }) => (
-                    <View style={styles.detalheItem}>
-                      <Text style={styles.detalheDescricao}>
-                        {item.numeroParcela}. {item.despesa.descricao}
-                      </Text>
-                      <Text style={styles.detalheValor}>
-                        {currency(Number(item.valor))}
-                      </Text>
-                    </View>
-                  )}
-                />
-
-                <View style={styles.navBtns}>
-                  <TouchableOpacity
-                    style={styles.navBtn}
-                    onPress={() => navegar(-1)}
-                  >
-                    <Text style={styles.navText}>{"<"} Anterior</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.navBtn}
-                    onPress={() => navegar(1)}
-                  >
-                    <Text style={styles.navText}>Próxima {">"}</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.fecharBtn}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                    Fechar
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-            {!loadingFatura && !detalhe && (
-              <Text style={{ textAlign: "center", color: "#555" }}>
-                Nenhuma fatura disponível
-              </Text>
-            )}
+  visible={modalVisible}
+  transparent
+  animationType="fade"
+  onRequestClose={() => setModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      {loadingFatura && !detalhe && (
+        <ActivityIndicator size="large" color="#4a90e2" />
+      )}
+      {detalhe && (
+        <>
+          {/* Header estilizado */}
+          <View style={styles.headerBox}>
+            <Text style={styles.modalTitle}>
+              Fatura {mes}/{ano}
+            </Text>
+            <Text style={styles.valorRestante}>
+              {currency(detalhe.resumo.restante)}
+            </Text>
+            <Text style={styles.valorLegenda}>Valor a pagar</Text>
           </View>
-        </View>
-      </Modal>
+
+          {/* Resumo */}
+          <Text style={styles.resumo}>
+            Total: {currency(Number(detalhe.fatura.valorTotal))} | Pago:{" "}
+            {currency(Number(detalhe.fatura.valorPago))} | Restante:{" "}
+            {currency(detalhe.resumo.restante)} (
+            {pct(detalhe.resumo.percentPago)})
+          </Text>
+
+          {/* Lista de parcelas */}
+          <FlatList
+            data={detalhe.fatura.parcelas}
+            keyExtractor={(p) => p.id}
+            style={{ maxHeight: 300, marginBottom: 12 }}
+            ListEmptyComponent={
+              <Text style={{ textAlign: "center", color: "#666" }}>
+                Sem parcelas
+              </Text>
+            }
+            renderItem={({ item }) => (
+              <View style={styles.detalheItem}>
+                <View>
+                  <Text style={styles.detalheDescricao}>
+                    {item.numeroParcela}. {item.despesa.descricao}
+                  </Text>
+                  <Text style={styles.detalheData}>
+                    Venc: {item.dataVencimento}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.detalheValor,
+                    item.paga && { color: "#4caf50" },
+                  ]}
+                >
+                  {currency(Number(item.valor))}
+                </Text>
+              </View>
+            )}
+          />
+
+          {/* Navegação */}
+          <View style={styles.navBtns}>
+            <TouchableOpacity
+              style={styles.navBtn}
+              onPress={() => navegar(-1)}
+            >
+              <Text style={styles.navText}>{"<"} Anterior</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.navBtn}
+              onPress={() => navegar(1)}
+            >
+              <Text style={styles.navText}>Próxima {">"}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Botão fechar */}
+          <TouchableOpacity
+            style={styles.fecharBtn}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={{ color: "#fff", fontWeight: "bold" }}>
+              Fechar
+            </Text>
+          </TouchableOpacity>
+        </>
+      )}
+      {!loadingFatura && !detalhe && (
+        <Text style={{ textAlign: "center", color: "#555" }}>
+          Nenhuma fatura disponível
+        </Text>
+      )}
+    </View>
+  </View>
+</Modal>
+
     </>
   );
 }
@@ -434,4 +457,26 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
   },
+  headerBox: {
+    backgroundColor: "#f5f9ff",
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  valorRestante: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#e53935",
+    marginTop: 4,
+  },
+  valorLegenda: {
+    fontSize: 13,
+    color: "#666",
+  },
+  detalheData: {
+    fontSize: 12,
+    color: "#888",
+  },
+  
 });

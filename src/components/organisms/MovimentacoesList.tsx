@@ -7,11 +7,11 @@ import {
   Modal,
 } from "react-native";
 import { useState } from "react";
-import { Alert } from "react-native";
 import api from "../../utils/api";
 import { MaterialIcons } from "@expo/vector-icons";
 import Card from "../atoms/Card";
 import Valor from "../atoms/Valor";
+import CustomAlert from "../atoms/Alert"; // ✅ importa o alerta customizado
 import { Movimentacao } from "../../types/types";
 
 const INITIAL_COUNT = 5;
@@ -23,34 +23,33 @@ interface MovimentacoesListProps {
   onChanged?: () => void;
 }
 
-export default function MovimentacoesList({ movimentacoes, scrollEnabled = true, onChanged }: MovimentacoesListProps) {
+export default function MovimentacoesList({
+  movimentacoes,
+  scrollEnabled = true,
+  onChanged,
+}: MovimentacoesListProps) {
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [selected, setSelected] = useState<Movimentacao | null>(null);
   const [editando, setEditando] = useState(false);
-  // Excluir movimentação
+
+  // estado para confirmar exclusão
+  const [showAlert, setShowAlert] = useState(false);
+
   const handleDelete = async () => {
     if (!selected) return;
-    Alert.alert(
-      'Excluir',
-      `Deseja realmente excluir esta ${selected.tipo.toLowerCase()}?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir', style: 'destructive', onPress: async () => {
-            try {
-              const rota = selected.tipo === 'Receita' ? '/receitas/' : '/despesas/';
-              await api.delete(rota + selected.id);
-              setSelected(null);
-              onChanged?.();
-            } catch (e) {
-              let message = 'Não foi possível excluir.';
-              if (e instanceof Error) message += `\n${e.message}`;
-              Alert.alert('Erro', message);
-            }
-          }
-        }
-      ]
-    );
+    try {
+      const rota = selected.tipo === "Receita" ? "/receitas/" : "/despesas/";
+      await api.delete(rota + selected.id);
+      setSelected(null);
+      setShowAlert(false);
+      onChanged?.();
+    } catch (e) {
+      let message = "Não foi possível excluir.";
+      if (e instanceof Error) message += `\n${e.message}`;
+      setShowAlert(false);
+      // pode exibir outro CustomAlert de erro se quiser
+      console.error(message);
+    }
   };
 
   const handleShowMore = () => setVisibleCount((prev) => prev + ITEMS_PER_LOAD);
@@ -94,7 +93,6 @@ export default function MovimentacoesList({ movimentacoes, scrollEnabled = true,
             {/* Conteúdo da movimentação */}
             <View style={styles.details}>
               <Text style={styles.desc}>{item.descricao}</Text>
-
               <Text style={styles.meta}>
                 {item.categoria ? item.categoria.name : "Sem categoria"}
                 {" • "}
@@ -102,7 +100,6 @@ export default function MovimentacoesList({ movimentacoes, scrollEnabled = true,
                 {" • "}
                 {item.metodoPagamento}
               </Text>
-
               <Text style={styles.date}>
                 {new Date(item.data).toLocaleDateString("pt-BR", {
                   day: "2-digit",
@@ -118,7 +115,6 @@ export default function MovimentacoesList({ movimentacoes, scrollEnabled = true,
             </View>
           </TouchableOpacity>
         )}
-
       />
 
       {/* Botões Ver mais / Ocultar */}
@@ -151,7 +147,10 @@ export default function MovimentacoesList({ movimentacoes, scrollEnabled = true,
               Valor: R$ {selected?.valor.toFixed(2)}
             </Text>
             <Text style={styles.meta}>
-              Data: {selected?.data ? new Date(selected.data).toLocaleDateString("pt-BR") : ""}
+              Data:{" "}
+              {selected?.data
+                ? new Date(selected.data).toLocaleDateString("pt-BR")
+                : ""}
             </Text>
             <Text style={styles.meta}>Método: {selected?.metodoPagamento}</Text>
             <Text style={styles.meta}>
@@ -164,29 +163,78 @@ export default function MovimentacoesList({ movimentacoes, scrollEnabled = true,
               <Text style={styles.meta}>Cartão: {selected?.cartao?.name}</Text>
             )}
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 18 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginTop: 18,
+              }}
+            >
               <TouchableOpacity
-                style={{ backgroundColor: '#28a745', padding: 10, borderRadius: 8, flex: 1, marginRight: 8 }}
+                style={{
+                  backgroundColor: "#28a745",
+                  padding: 10,
+                  borderRadius: 8,
+                  flex: 1,
+                  marginRight: 8,
+                }}
                 onPress={() => setEditando(true)}
               >
-                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Editar</Text>
+                <Text
+                  style={{
+                    color: "#fff",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Editar
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={{ backgroundColor: '#dc3545', padding: 10, borderRadius: 8, flex: 1, marginLeft: 8 }}
-                onPress={handleDelete}
+                style={{
+                  backgroundColor: "#dc3545",
+                  padding: 10,
+                  borderRadius: 8,
+                  flex: 1,
+                  marginLeft: 8,
+                }}
+                onPress={() => setShowAlert(true)} // ✅ abre o alerta customizado
               >
-                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold' }}>Excluir</Text>
+                <Text
+                  style={{
+                    color: "#fff",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Excluir
+                </Text>
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity onPress={() => setSelected(null)}>
-              <Text style={{ color: "#007AFF", marginTop: 20, textAlign: "center" }}>
+              <Text
+                style={{
+                  color: "#007AFF",
+                  marginTop: 20,
+                  textAlign: "center",
+                }}
+              >
                 Fechar
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+
+      {/* ✅ Alerta customizado de confirmação */}
+      <CustomAlert
+        visible={showAlert}
+        title="Excluir"
+        message={`Deseja realmente excluir esta ${selected?.tipo.toLowerCase()}?`}
+        onCancel={() => setShowAlert(false)}
+        onConfirm={handleDelete}
+      />
     </Card>
   );
 }
@@ -213,38 +261,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  details: {
-    flex: 1,
-  },
-  desc: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#111",
-  },
-  meta: {
-    fontSize: 12,
-    color: "#777",
-    marginTop: 2,
-  },
-  date: {
-    fontSize: 11,
-    color: "#aaa",
-    marginTop: 1,
-  },
-  valueWrapper: {
-    minWidth: 90,
-    alignItems: "flex-end",
-  },
-  showMoreButton: {
-    alignItems: "center",
-    marginTop: 10,
-    paddingVertical: 6,
-  },
-  showMoreText: {
-    fontSize: 14,
-    color: "#007AFF",
-    fontWeight: "500",
-  },
+  details: { flex: 1 },
+  desc: { fontSize: 15, fontWeight: "600", color: "#111" },
+  meta: { fontSize: 12, color: "#777", marginTop: 2 },
+  date: { fontSize: 11, color: "#aaa", marginTop: 1 },
+  valueWrapper: { minWidth: 90, alignItems: "flex-end" },
+  showMoreButton: { alignItems: "center", marginTop: 10, paddingVertical: 6 },
+  showMoreText: { fontSize: 14, color: "#007AFF", fontWeight: "500" },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -258,9 +281,5 @@ const styles = StyleSheet.create({
     width: "85%",
     elevation: 4,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 10,
-  },
+  modalTitle: { fontSize: 18, fontWeight: "700", marginBottom: 10 },
 });

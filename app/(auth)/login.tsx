@@ -39,9 +39,9 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const response = await api.post("/auth/login", { 
-        username: username.trim(), 
-        senha: senha.trim() 
+      const response = await api.post("/auth/login", {
+        username: username.trim(),
+        senha: senha.trim()
       });
       const data = response.data;
 
@@ -77,7 +77,7 @@ export default function LoginScreen() {
       <Text style={styles.title}>My control</Text>
 
       {/* Campo Usuário */}
-  <View style={[styles.inputWrapper, error.username && styles.inputError]}>
+      <View style={[styles.inputWrapper, error.username && styles.inputError]}>
         <Feather name="user" size={20} color="#666" style={styles.icon} />
         <TextInput
           style={styles.input}
@@ -97,7 +97,7 @@ export default function LoginScreen() {
       {error.username && <Text style={styles.errorText}>{error.username}</Text>}
 
       {/* Campo Senha */}
-  <View style={[styles.inputWrapper, error.senha && styles.inputError]}>
+      <View style={[styles.inputWrapper, error.senha && styles.inputError]}>
         <Feather name="lock" size={20} color="#666" style={styles.icon} />
         <TextInput
           style={styles.input}
@@ -114,7 +114,7 @@ export default function LoginScreen() {
           onSubmitEditing={handleLogin}
           editable={!loading}
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => setShowPassword(!showPassword)}
           disabled={loading}
         >
@@ -125,9 +125,9 @@ export default function LoginScreen() {
           />
         </TouchableOpacity>
       </View>
-  {error.senha && <Text style={styles.errorText}>{error.senha}</Text>}
-  {/* Mensagem de erro de autenticação (senha/email incorretos) */}
-  {error.auth && <Text style={styles.errorText}>{error.auth}</Text>}
+      {error.senha && <Text style={styles.errorText}>{error.senha}</Text>}
+      {/* Mensagem de erro de autenticação (senha/email incorretos) */}
+      {error.auth && <Text style={styles.errorText}>{error.auth}</Text>}
 
       {/* Botão Login */}
       <TouchableOpacity
@@ -147,7 +147,7 @@ export default function LoginScreen() {
 
       {/* Links */}
       <View style={styles.linksContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => router.push("/(auth)/register")}
           disabled={loading}
         >
@@ -161,7 +161,7 @@ export default function LoginScreen() {
           <Text style={styles.link}>Esqueceu a senha?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => router.push("/")}
           disabled={loading}
         >

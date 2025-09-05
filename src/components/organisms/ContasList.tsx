@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Text, TouchableOpacity, View, Modal, StyleSheet, FlatList, Alert } from "react-native";
+import { Text, TouchableOpacity, View, Modal, StyleSheet, FlatList } from "react-native";
 import Card from "../atoms/Card";
 import ContaItem from "../molecules/ContaItem";
 import { Feather } from "@expo/vector-icons";
@@ -7,21 +7,33 @@ import CreateContaForm from "../organisms/CreateContaForm";
 import { Conta } from "../../types/types";
 import api from "../../utils/api";
 import AddCartaoToContaForm from "../organisms/AddCartaoToContaForm";
+import CustomAlert from "../atoms/Alert";
+
 type ContasListProps = {
   contas: Conta[];
   scrollEnabled?: boolean;
-  onChanged?: () => void; // callback para sinalizar criação/alteração
+  onChanged?: () => void;
 };
+
 export default function ContasList({ contas, scrollEnabled = true, onChanged }: ContasListProps) {
   const [showForm, setShowForm] = useState(false);
   const [selectedConta, setSelectedConta] = useState<Conta | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [listaContas, setListaContas] = useState<Conta[]>(contas);
   const [showAddCartaoModal, setShowAddCartaoModal] = useState(false);
-  // Atualiza lista local quando prop muda
+
+  // alerts customizados
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState<{ visible: boolean; message: string }>({
+    visible: false,
+    message: "",
+  });
+
   useEffect(() => {
     setListaContas(contas);
   }, [contas]);
+
   const openDetails = (conta: Conta) => {
     setSelectedConta(conta);
     setShowDetailsModal(true);
@@ -34,24 +46,16 @@ export default function ContasList({ contas, scrollEnabled = true, onChanged }: 
       setListaContas(prev => prev.filter(c => c.id !== selectedConta.id));
       setShowDetailsModal(false);
       setSelectedConta(null);
-      Alert.alert('Sucesso', 'Conta excluída.');
+      setShowSuccessAlert(true);
     } catch (e) {
-      let message = 'Não foi possível excluir a conta.';
+      let message = "Não foi possível excluir a conta.";
       if (e instanceof Error) message += `\n${e.message}`;
-      Alert.alert('Erro', message);
+      setShowErrorAlert({ visible: true, message });
     }
   };
 
   const confirmDelete = () => {
-    if (!selectedConta) return;
-    Alert.alert(
-      'Confirmar exclusão',
-      `Excluir a conta "${selectedConta.nome}"? Esta ação não pode ser desfeita.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Excluir', style: 'destructive', onPress: handleDelete },
-      ]
-    );
+    setShowDeleteAlert(true);
   };
 
   return (
@@ -59,10 +63,7 @@ export default function ContasList({ contas, scrollEnabled = true, onChanged }: 
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Saldos por Conta</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowForm(true)}
-        >
+        <TouchableOpacity style={styles.addButton} onPress={() => setShowForm(true)}>
           <Feather name="plus" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -76,17 +77,14 @@ export default function ContasList({ contas, scrollEnabled = true, onChanged }: 
             <ContaItem nome={item.nome} saldo={item.saldo} />
           </TouchableOpacity>
         )}
-        scrollEnabled={scrollEnabled} // padrão true
+        scrollEnabled={scrollEnabled}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         contentContainerStyle={{ paddingVertical: 10 }}
       />
 
       {/* Modal de criação de conta */}
       <Modal visible={showForm} animationType="slide">
-          <CreateContaForm
-            onClose={() => setShowForm(false)}
-            onSuccess={() => { onChanged?.(); }}
-          />
+        <CreateContaForm onClose={() => setShowForm(false)} onSuccess={() => onChanged?.()} />
       </Modal>
 
       {/* Modal de detalhes da conta */}
@@ -103,34 +101,23 @@ export default function ContasList({ contas, scrollEnabled = true, onChanged }: 
             {selectedConta && (
               <View style={styles.detailsContainer}>
                 <Text style={styles.detailText}>
-                  Nome:{" "}
-                  <Text style={styles.detailValue}>{selectedConta.nome}</Text>
+                  Nome: <Text style={styles.detailValue}>{selectedConta.nome}</Text>
                 </Text>
                 <Text style={styles.detailText}>
                   Saldo:{" "}
-                  <Text style={styles.detailValue}>
-                    R$ {selectedConta.saldo.toFixed(2)}
-                  </Text>
+                  <Text style={styles.detailValue}>R$ {selectedConta.saldo.toFixed(2)}</Text>
                 </Text>
                 <Text style={styles.detailText}>
-                  Tipo:{" "}
-                  <Text style={styles.detailValue}>{selectedConta.type}</Text>
+                  Tipo: <Text style={styles.detailValue}>{selectedConta.type}</Text>
                 </Text>
                 <Text style={styles.detailText}>
-                  Agência:{" "}
-                  <Text style={styles.detailValue}>
-                    {selectedConta.agencia}
-                  </Text>
+                  Agência: <Text style={styles.detailValue}>{selectedConta.agencia}</Text>
                 </Text>
                 <Text style={styles.detailText}>
-                  Conta:{" "}
-                  <Text style={styles.detailValue}>{selectedConta.conta}</Text>
+                  Conta: <Text style={styles.detailValue}>{selectedConta.conta}</Text>
                 </Text>
                 <Text style={styles.detailText}>
-                  CDI %:{" "}
-                  <Text style={styles.detailValue}>
-                    {selectedConta.cdiPercent}%
-                  </Text>
+                  CDI %: <Text style={styles.detailValue}>{selectedConta.cdiPercent}%</Text>
                 </Text>
 
                 <View style={styles.actionRow}>
@@ -141,17 +128,8 @@ export default function ContasList({ contas, scrollEnabled = true, onChanged }: 
                     <Feather name="credit-card" size={20} color="#fff" />
                     <Text style={styles.editButtonText}>Adicionar Cartão</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.editButton}
-                    onPress={() => alert("Editar conta")}
-                  >
-                    <Feather name="edit" size={20} color="#fff" />
-                    <Text style={styles.editButtonText}>Editar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={confirmDelete}
-                  >
+
+                  <TouchableOpacity style={styles.deleteButton} onPress={confirmDelete}>
                     <Feather name="trash-2" size={20} color="#fff" />
                     <Text style={styles.editButtonText}>Excluir</Text>
                   </TouchableOpacity>
@@ -179,6 +157,34 @@ export default function ContasList({ contas, scrollEnabled = true, onChanged }: 
           </View>
         </View>
       </Modal>
+
+      {/* ALERTAS */}
+      <CustomAlert
+        visible={showDeleteAlert}
+        title="Confirmar exclusão"
+        message={`Excluir a conta "${selectedConta?.nome}"? Esta ação não pode ser desfeita.`}
+        onCancel={() => setShowDeleteAlert(false)}
+        onConfirm={() => {
+          setShowDeleteAlert(false);
+          handleDelete();
+        }}
+      />
+
+      <CustomAlert
+        visible={showSuccessAlert}
+        title="Sucesso"
+        message="Conta excluída."
+        onCancel={() => setShowSuccessAlert(false)}
+        onConfirm={() => setShowSuccessAlert(false)}
+      />
+
+      <CustomAlert
+        visible={showErrorAlert.visible}
+        title="Erro"
+        message={showErrorAlert.message}
+        onCancel={() => setShowErrorAlert({ visible: false, message: "" })}
+        onConfirm={() => setShowErrorAlert({ visible: false, message: "" })}
+      />
     </Card>
   );
 }
@@ -210,7 +216,6 @@ const styles = StyleSheet.create({
   },
   separator: { height: 1, backgroundColor: "#eee", marginVertical: 8 },
 
-  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -256,10 +261,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   editButtonText: { color: "#fff", fontWeight: "bold", marginLeft: 8 },
 });
-
-// (funções de ação estão dentro do componente)

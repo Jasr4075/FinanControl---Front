@@ -2,50 +2,36 @@ import api from "@/src/utils/api";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
 import useRedirectIfAuth from "@/src/hooks/useRedirectIfAuth";
 import Input from "../../src/components/atoms/Input";
-
+import CustomAlert from "../../src/components/atoms/Alert";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
   const router = useRouter();
-    const loadingAuth = useRedirectIfAuth();
-  
+  const loadingAuth = useRedirectIfAuth();
 
-  const handleReset = async () => {
-    if (!email) return Alert.alert("Erro", "Digite seu email");
-
-    try {
-      setLoading(true);
-      const { data } = await api.post("/auth/forgot-password", { email });
-      if (!data) throw new Error("Falha ao enviar email");
-      Alert.alert(
-        "Sucesso",
-        "Enviamos um link de recuperação para o seu email!"
-      );
-      router.push("/(auth)/login");
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível enviar email. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Recuperar Senha</Text>
       <Text style={styles.subtitle}>
-        Digite seu email cadastrado e enviaremos um link para redefinir sua
-        senha.
+        Digite seu email cadastrado e enviaremos um link para redefinir sua senha.
       </Text>
 
       <Input
@@ -58,9 +44,8 @@ export default function ForgotPasswordScreen() {
       />
 
       <TouchableOpacity
-        onPress={handleReset}
-        style={[styles.button, loading && { opacity: 0.7 }]}
-        disabled={loading}
+        onPress={() => showAlert("Recuperar senha", "Esta função ainda não foi implementada")}
+        style={styles.button}
       >
         {loading ? (
           <ActivityIndicator color="#fff" />
@@ -72,6 +57,15 @@ export default function ForgotPasswordScreen() {
       <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
         <Text style={styles.link}>Voltar para Login</Text>
       </TouchableOpacity>
+
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onConfirm={() => setAlertVisible(false)}
+        onCancel={() => setAlertVisible(false)} // opcional
+      />
     </View>
   );
 }

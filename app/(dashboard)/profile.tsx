@@ -1,23 +1,22 @@
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Image,
-  Alert,
 } from "react-native";
 import { useAuthUser } from "@/src/hooks";
 import { useRouter } from "expo-router";
+import CustomAlert from "../../src/components/atoms/Alert"; // ajusta o caminho se precisar
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthUser();
   const router = useRouter();
+  const [showAlert, setShowAlert] = useState(false);
 
   const handleLogout = () => {
-    Alert.alert("Sair", "Deseja realmente sair?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Sair", style: "destructive", onPress: logout },
-    ]);
+    setShowAlert(true);
   };
 
   return (
@@ -49,6 +48,18 @@ export default function ProfileScreen() {
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>Sair</Text>
       </TouchableOpacity>
+
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={showAlert}
+        title="Sair"
+        message="Deseja realmente sair?"
+        onCancel={() => setShowAlert(false)}
+        onConfirm={() => {
+          logout();
+          setShowAlert(false);
+        }}
+      />
     </View>
   );
 }

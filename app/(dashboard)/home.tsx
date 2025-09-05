@@ -79,7 +79,7 @@ export default function Home() {
             tipo: "Despesa",
             descricao: d.descricao,
             valor: Number(d.valor) || 0,
-            data: d.createdAt,
+            data: d.data,
             metodoPagamento: d.metodoPagamento ?? "Sem método",
             conta: d.conta ? { bancoNome: d.conta.bancoNome } : undefined,
             categoria: d.categoria ? { name: d.categoria.name } : undefined,
@@ -93,7 +93,7 @@ export default function Home() {
             tipo: "Receita",
             descricao: r.descricao ?? r.description,
             valor: Number(r.valor ?? r.quantidade) || 0,
-            data: r.createdAt,
+            data: r.data,
             conta: r.conta ? { bancoNome: r.conta.bancoNome } : undefined,
             categoria: r.categories ? { name: r.categories.name } : undefined,
           })

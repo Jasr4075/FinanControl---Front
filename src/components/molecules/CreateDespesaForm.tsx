@@ -17,6 +17,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { Conta, Categoria, CreateDespesaInput } from "../../types/types";
 import Input from "../atoms/Input";
+import CustomAlert from "../atoms/Alert";
 
 interface Props {
   contaId?: string;
@@ -25,6 +26,7 @@ interface Props {
   onSubmit?: (data: CreateDespesaInput) => Promise<void>;
   loading?: boolean;
 }
+
 
 export default function CreateDespesaForm({
   contaId,
@@ -57,7 +59,17 @@ export default function CreateDespesaForm({
   const [searchCategoria, setSearchCategoria] = useState("");
   const [searchConta, setSearchConta] = useState("");
 
-  // dentro do seu componente
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+
+  //Mostrar alerta: 
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
+
   // filtra só pelo search, já que categorias já é só DESPESA
   const categoriasFiltradas = categorias.filter((cat) =>
     cat.name.toLowerCase().includes(searchCategoria.toLowerCase())
@@ -74,14 +86,12 @@ export default function CreateDespesaForm({
   // Hooks de efeito
   useEffect(() => {
     if (success) {
-      Alert.alert("Sucesso!", "Despesa criada com sucesso!", [
-        { text: "OK", onPress: onClose },
-      ]);
+      showAlert("Sucesso!", "Despesa criada com sucesso!");
     }
-  }, [success, onClose]);
+  });
 
   useEffect(() => {
-    if (error) Alert.alert("Erro", error.toString());
+    if (error) showAlert("Erro", error.toString());
   }, [error]);
 
   useEffect(() => {
@@ -103,7 +113,7 @@ export default function CreateDespesaForm({
         setCategorias(despesas); // já seta direto
       } catch (err) {
         console.error(err);
-        Alert.alert("Erro", "Não foi possível carregar as categorias");
+        showAlert("Erro", "Não foi possível carregar as categorias");
       }
     }
     fetchCategorias();
@@ -128,7 +138,7 @@ export default function CreateDespesaForm({
           setContas(contasData);
         }
       } catch {
-        Alert.alert("Erro", "Não foi possível carregar as contas");
+        showAlert("Erro", "Não foi possível carregar as contas");
       }
     }
     fetchContas();
@@ -147,7 +157,7 @@ export default function CreateDespesaForm({
     const user = await getUser();
     if (!user?.id) return alert("Usuário não encontrado!");
     if (!descricao || !valor || !contaSelecionada || !categoryId)
-      return Alert.alert("Atenção", "Preencha todos os campos obrigatórios!");
+      showAlert("Atenção", "Preencha todos os campos obrigatórios!");
 
     const isCredito = metodoPagamento === "CREDITO";
     const payload: CreateDespesaInput = {
@@ -165,13 +175,12 @@ export default function CreateDespesaForm({
     try {
       if (onSubmit) await onSubmit(payload);
       else await createDespesa(payload);
-      Alert.alert("Sucesso!", "Despesa criada com sucesso!", [
-        { text: "OK", onPress: onClose },
-      ]);
+      showAlert("Sucesso!", "Despesa criada com sucesso!");
+
     } catch (e) {
       let message = "Não foi possível criar a despesa. Tente novamente.";
       if (e instanceof Error) message += `\n${e.message}`;
-      Alert.alert("Erro", message);
+      showAlert("Erro", message);
     }
   };
 
@@ -268,7 +277,7 @@ export default function CreateDespesaForm({
                     style={[
                       styles.selectButtonText,
                       cartaoSelecionado === card.id &&
-                        styles.selectButtonTextActive,
+                      styles.selectButtonTextActive,
                     ]}
                   >
                     {card.nome}
@@ -366,7 +375,7 @@ export default function CreateDespesaForm({
                     style={[
                       styles.selectButtonText,
                       metodoPagamento === metodo &&
-                        styles.selectButtonTextActive,
+                      styles.selectButtonTextActive,
                     ]}
                   >
                     {metodo}
@@ -420,6 +429,14 @@ export default function CreateDespesaForm({
           </Text>
         </TouchableOpacity>
       </ScrollView>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onConfirm={() => setAlertVisible(false)}
+        onCancel={() => setAlertVisible(false)} // opcional
+      />
+
     </KeyboardAvoidingView>
   );
 }
