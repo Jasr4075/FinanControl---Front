@@ -119,11 +119,76 @@ export async function clearAuth() {
 }
 
 export async function isAuthenticated(): Promise<boolean> {
-  const token = await getToken();
-  return !!token;
+  // Consider authenticated only when token exists and appears valid
+  return validateToken();
+}
+
+function base64UrlDecode(input: string): string | null {
+  try {
+    let str = input.replace(/-/g, '+').replace(/_/g, '/');
+    switch (str.length % 4) {
+      case 0:
+        break;
+      case 2:
+        str += '==';
+        break;
+      case 3:
+        str += '=';
+        break;
+      default:
+        return null;
+    }
+    if (typeof atob === 'function') {
+      return atob(str);
+    }
+    // Node/other envs
+    if (typeof Buffer !== 'undefined') {
+      return Buffer.from(str, 'base64').toString('binary');
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function parseJwtPayload(token: string): any | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    const binary = base64UrlDecode(payload);
+    if (!binary) return null;
+    const json = decodeURIComponent(
+      binary.split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+    );
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
 }
 
 export async function validateToken(): Promise<boolean> {
   const token = await getToken();
-  return token ? token.length > 10 : false;
+  if (!token) return false;
+  const payload = parseJwtPayload(token);
+  if (payload && typeof payload.exp === 'number') {
+    const now = Math.floor(Date.now() / 1000);
+    // consider a small leeway of 5 seconds
+    return payload.exp > now + 5;
+  }
+  // fallback for non-JWT tokens
+  return token.length > 10;
+}
+
+// Centralized logout helper that clears auth storage and optionally redirects to login
+export async function forceLogout(redirect = true) {
+  await clearAuth();
+  try {
+    if (redirect) {
+      const { router } = await import('expo-router');
+      router.replace('/login');
+    }
+  } catch {
+    // ignore navigation failures
+  }
 }

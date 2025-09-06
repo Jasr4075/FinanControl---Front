@@ -1,6 +1,6 @@
 // src/utils/api.ts
 import axios from "axios";
-import { getToken, getRefreshToken, saveToken, saveRefreshToken, saveUser, deleteToken, deleteRefreshToken } from "./auth";
+import { getToken, getRefreshToken, saveToken, saveRefreshToken, saveUser, forceLogout } from "./auth";
 import { router } from "expo-router";
 
 const api = axios.create({
@@ -50,7 +50,9 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     const isLogin = originalRequest?.url?.includes("/auth/login");
-    if (!isLogin && error.response?.status === 401 && !originalRequest._retry) {
+  const status = error.response?.status;
+  // handle unauthorized or forbidden
+  if (!isLogin && (status === 401 || status === 403) && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise(function(resolve, reject) {
           failedQueue.push({ resolve, reject });
@@ -75,27 +77,16 @@ api.interceptors.response.use(
     originalRequest.headers["Authorization"] = `Bearer ${token}`;
     return api(originalRequest);
       } catch (err) {
-        processQueue(err, null);
-        await deleteToken();
-        await deleteRefreshToken();
-        if (typeof window !== 'undefined') {
-          localStorage.clear();
-        }
-        router.replace("/login");
-        return Promise.reject(err);
+    processQueue(err, null);
+    // Unrecoverable: force logout and navigate to login
+    try { await forceLogout(true); } catch {}
+    return Promise.reject(err);
       } finally {
         isRefreshing = false;
       }
     }
-    // Se não for 401 ou já tentou refresh, faz logout normal
-    if (!isLogin && error.response) {
-      await deleteToken();
-      await deleteRefreshToken();
-      if (typeof window !== 'undefined') {
-        localStorage.clear();
-      }
-      router.replace("/login");
-    }
+  // For other status codes (400, 404, 500), don't clear auth automatically.
+  // Let components handle these errors based on their status.
     return Promise.reject(error);
   }
 );
