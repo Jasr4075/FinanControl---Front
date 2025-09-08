@@ -4,7 +4,6 @@ import { getUser } from "@/src/utils/auth";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useEffect, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -18,6 +17,8 @@ import { Feather } from "@expo/vector-icons";
 import { Conta, Categoria, CreateDespesaInput } from "../../types/types";
 import Input from "../atoms/Input";
 import CustomAlert from "../atoms/Alert";
+import { formatCurrency, parseCurrencyToNumber } from "../../utils/formatCurrency";
+
 
 interface Props {
   contaId?: string;
@@ -44,7 +45,8 @@ export default function CreateDespesaForm({
 
   // Estados do formulário
   const [descricao, setDescricao] = useState("");
-  const [valor, setValor] = useState("");
+  const [valor, setValor] = useState("");        // string formatada
+  const [valorNumber, setValorNumber] = useState<number>(0); // número real
   const [parcelas, setParcelas] = useState("1");
   const [metodoPagamento, setMetodoPagamento] = useState("PIX");
   const [contaSelecionada, setContaSelecionada] = useState(contaId || "");
@@ -62,6 +64,18 @@ export default function CreateDespesaForm({
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
+
+  const handleChange = (text: string) => {
+    if (!text) {
+      setValor("");
+      setValorNumber(0);
+      return;
+    }
+    const formatted = formatCurrency(text);
+    setValor(formatted);
+    setValorNumber(parseCurrencyToNumber(formatted));
+  };
+  
 
   //Mostrar alerta: 
   const showAlert = (title: string, message: string) => {
@@ -166,7 +180,7 @@ export default function CreateDespesaForm({
       cartaoId: cartaoSelecionado || undefined,
       categoryId,
       descricao,
-      valor: Number(valor),
+      valor: valorNumber,
       metodoPagamento: metodoPagamento as "PIX" | "DINHEIRO" | "CREDITO" | "DEBITO",
       data: date.toISOString().split("T")[0],
       ...(isCredito && { parcelado: true, numeroParcelas: Number(parcelas) }),
@@ -344,10 +358,10 @@ export default function CreateDespesaForm({
         <Text style={styles.label}>Valor *</Text>
         <Input
           style={styles.input}
-          placeholder="Valor"
+          placeholder="0,00"
           keyboardType="numeric"
           value={valor}
-          onChangeText={setValor}
+          onChangeText={handleChange}
         />
 
         {/* Método de Pagamento */}

@@ -17,6 +17,7 @@ import api from "@/src/utils/api";
 import { useCreateReceita } from "@/src/hooks/useCreateReceita";
 import { Conta, Categoria, CreateReceitaInput } from "../../types/types";
 import Input from "../atoms/Input";
+import { formatCurrency, parseCurrencyToNumber } from "../../utils/formatCurrency";
 
 export default function CreateReceitaForm({
   onClose,
@@ -37,8 +38,20 @@ export default function CreateReceitaForm({
 
   const [description, setDescription] = useState("");
   const [quantidade, setQuantidade] = useState("");
+  const [quantidadeNumber, setQuantidadeNumber] = useState<number>(0);
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const handleChange = (text: string) => {
+    if (!text) {
+      setQuantidade("");
+      setQuantidadeNumber(0);
+      return;
+    }
+    const formatted = formatCurrency(text);
+    setQuantidade(formatted);
+    setQuantidadeNumber(parseCurrencyToNumber(formatted));
+  };  
 
   useEffect(() => {
     if (success) {
@@ -93,7 +106,7 @@ export default function CreateReceitaForm({
       accountId,
       categoryId,
       description,
-      quantidade: Number(quantidade),
+      quantidade: quantidadeNumber,
       data: date.toISOString().split("T")[0],
     };
     await createReceita(payload);
@@ -216,15 +229,15 @@ export default function CreateReceitaForm({
           />
         </View>
 
-        {/* Quantidade */}
+        {/* Quantidade / Valor */}
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Quantidade *</Text>
+          <Text style={styles.label}>Valor *</Text>
           <Input
             style={styles.input}
             value={quantidade}
-            onChangeText={setQuantidade}
+            onChangeText={handleChange}
             keyboardType="numeric"
-            placeholder="Valor"
+            placeholder="0,00"
           />
         </View>
 

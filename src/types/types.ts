@@ -73,7 +73,7 @@ export interface CreateDespesaInput {
   descricao: string;
   valor: number;
   metodoPagamento: "PIX" | "CREDITO" | "DEBITO" | "DINHEIRO";
-  data: string; // YYYY-MM-DD
+  data: string;
   parcelado?: boolean;
   numeroParcelas?: number;
   juros?: number;

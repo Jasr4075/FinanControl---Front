@@ -4,7 +4,7 @@
   packages = [ pkgs.nodejs_20 ];
 
   env = {
-    EXPO_USE_FAST_RESOLVER = 1;
+    EXPO_USE_FAST_RESOLVER = "1";
   };
 
   idx = {
