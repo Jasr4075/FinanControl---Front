@@ -19,34 +19,24 @@ import Input from "../atoms/Input";
 import CustomAlert from "../atoms/Alert";
 import { formatCurrency, parseCurrencyToNumber } from "../../utils/formatCurrency";
 
-
-interface Props {
-  contaId?: string;
-  cartaoId?: string;
-  onClose?: () => void;
-  onSubmit?: (data: CreateDespesaInput) => Promise<void>;
-  loading?: boolean;
-}
-
-
 export default function CreateDespesaForm({
   contaId,
   cartaoId,
   onClose,
   onSubmit,
-  loading,
-}: Props) {
-  const {
-    createDespesa,
-    loading: loadingHook,
-    error,
-    success,
-  } = useCreateDespesa();
-
-  // Estados do formulário
+  onSuccess,
+}: {
+  contaId?: string;
+  cartaoId?: string;
+  onClose?: () => void;
+  onSubmit?: (payload: CreateDespesaInput) => Promise<void>;
+  onSuccess?: () => void;
+}) {
+  
+  const { createDespesa, loading, error, success } = useCreateDespesa();
   const [descricao, setDescricao] = useState("");
-  const [valor, setValor] = useState("");        // string formatada
-  const [valorNumber, setValorNumber] = useState<number>(0); // número real
+  const [valor, setValor] = useState("");
+  const [valorNumber, setValorNumber] = useState<number>(0);
   const [parcelas, setParcelas] = useState("1");
   const [metodoPagamento, setMetodoPagamento] = useState("PIX");
   const [contaSelecionada, setContaSelecionada] = useState(contaId || "");
@@ -89,25 +79,30 @@ export default function CreateDespesaForm({
     cat.name.toLowerCase().includes(searchCategoria.toLowerCase())
   );
 
+  // filtra só pelo search
   const contasFiltradas = contas.filter((c) =>
     c.nome.toLowerCase().includes(searchConta.toLowerCase())
   );
 
+  // Verifica se a conta é efetivo
   const contaSelecionadaObj = contas.find((c) => c.id === contaSelecionada);
   const isEfetivo =
     contaSelecionadaObj?.type === "EFETIVO" && contaSelecionadaObj?.efetivo;
 
-  // Hooks de efeito
-  useEffect(() => {
-    if (success) {
-      showAlert("Sucesso!", "Despesa criada com sucesso!");
-    }
-  });
+    useEffect(() => {
+      if (success) {
+        showAlert("Sucesso!", "Despesa criada com sucesso!");
+        onSuccess?.();
+      }
+    }, [success, onSuccess]);
+    
+    
 
   useEffect(() => {
-    if (error) showAlert("Erro", error.toString());
+    if (error) console.log("Erro", error.toString());
   }, [error]);
 
+  // Se for efetivo, não mostrar cartão
   useEffect(() => {
     if (isEfetivo) {
       setMetodoPagamento("DINHEIRO");
@@ -124,7 +119,7 @@ export default function CreateDespesaForm({
         const despesas = res.data.data.filter(
           (cat: any) => cat.type === "DESPESA"
         );
-        setCategorias(despesas); // já seta direto
+        setCategorias(despesas);
       } catch (err) {
         console.error(err);
         showAlert("Erro", "Não foi possível carregar as categorias");
@@ -169,7 +164,7 @@ export default function CreateDespesaForm({
   // Submit
   const handleSubmit = async () => {
     const user = await getUser();
-    if (!user?.id) return alert("Usuário não encontrado!");
+    if (!user?.id) return showAlert("Erro", "Usuário não encontrado!");
     if (!descricao || !valor || !contaSelecionada || !categoryId)
       showAlert("Atenção", "Preencha todos os campos obrigatórios!");
 
@@ -189,8 +184,6 @@ export default function CreateDespesaForm({
     try {
       if (onSubmit) await onSubmit(payload);
       else await createDespesa(payload);
-      showAlert("Sucesso!", "Despesa criada com sucesso!");
-
     } catch (e) {
       let message = "Não foi possível criar a despesa. Tente novamente.";
       if (e instanceof Error) message += `\n${e.message}`;
@@ -439,7 +432,7 @@ export default function CreateDespesaForm({
         {/* Submit */}
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>
-            {loading ?? loadingHook ? "Criando..." : "Criar Despesa"}
+          {loading ? "Criando..." : "Criar Despesa"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -448,7 +441,7 @@ export default function CreateDespesaForm({
         title={alertTitle}
         message={alertMessage}
         onConfirm={() => setAlertVisible(false)}
-        onCancel={() => setAlertVisible(false)} // opcional
+        onCancel={() => setAlertVisible(false)}
       />
 
     </KeyboardAvoidingView>

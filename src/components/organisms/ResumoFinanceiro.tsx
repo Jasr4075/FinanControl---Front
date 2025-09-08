@@ -21,6 +21,7 @@ export default function ResumoFinanceiro({
         receitas={receitas}
         despesas={despesas}
         faturasBanco={0}
+        autoFetch={true}
       />
       <CartoesRow refreshKey={cartoesRefreshKey} />
     </View>

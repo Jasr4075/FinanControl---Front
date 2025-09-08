@@ -172,7 +172,15 @@ export default function Home() {
           />
         );
       case "contas":
-        return <ContasList contas={contas} scrollEnabled={false} />;
+        return <ContasList 
+        contas={contas} 
+        scrollEnabled={false}
+        onChanged={() => {
+          loadData(); 
+          setTotaisRefreshKey(k => k + 1);
+          setCartoesRefreshKey(k => k + 1); // <-- recarrega CartoesRow automaticamente
+        }}
+         />;
       case "movimentacoes":
         return (
           <MovimentacoesList

@@ -95,7 +95,7 @@ export default function ReceitaDespesaCard({
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         titulo={titulo}
-        detalhes={detalhesData.map(d => ({ ...d, data: d.data ?? "" }))} // garante que data existe
+        detalhes={detalhesData.map(d => ({ ...d, data: d.data ?? "" }))}
       />
 
 
