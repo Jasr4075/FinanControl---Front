@@ -9,14 +9,21 @@ import {
   FlatList,
 } from "react-native";
 import Card from "../atoms/Card";
+import DetalhesModal from "./DetalhesModal";
+import { useAuthUser } from "@/src/hooks";
+import { useReceitasDetalhes, useDespesasDetalhes } from "../../hooks/useDespesasReceitasDetalhes";
 
 type ReceitaDespesaCardProps = {
-  titulo: string;
+  titulo: "Receitas" | "Despesas";
   valor: number;
   cor: "green" | "red" | "blue" | "orange" | "purple";
   previousMonthValue?: number;
   style?: ViewStyle;
-  detalhes?: { id: string; descricao: string; valor: number }[];
+  detalhes?: { 
+    id: string; 
+    descricao: string; 
+    valor: number;
+   }[];
 };
 
 export default function ReceitaDespesaCard({
@@ -27,7 +34,14 @@ export default function ReceitaDespesaCard({
   style,
   detalhes = [],
 }: ReceitaDespesaCardProps) {
+  const { user, loading } = useAuthUser();
   const [modalVisible, setModalVisible] = useState(false);
+  
+  const receitas = useReceitasDetalhes(user?.id ?? "");
+  const despesas = useDespesasDetalhes(user?.id ?? "");
+  
+  const detalhesData = titulo === "Receitas" ? receitas : despesas;
+
 
   const styleMap = {
     green: { bg: "#E8F9F0", text: "#1ABC9C" },
@@ -77,45 +91,14 @@ export default function ReceitaDespesaCard({
         </TouchableOpacity>
       </Card>
 
-      {/* Modal com os detalhes */}
-      <Modal
+      <DetalhesModal
         visible={modalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{titulo} - Detalhes</Text>
+        onClose={() => setModalVisible(false)}
+        titulo={titulo}
+        detalhes={detalhesData.map(d => ({ ...d, data: d.data ?? "" }))} // garante que data existe
+      />
 
-            {detalhes.length > 0 ? (
-              <FlatList
-                data={detalhes}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View style={styles.detalheItem}>
-                    <Text style={styles.detalheDescricao}>
-                      {item.descricao}
-                    </Text>
-                    <Text style={styles.detalheValor}>
-                      R$ {item.valor.toFixed(2)}
-                    </Text>
-                  </View>
-                )}
-              />
-            ) : (
-              <Text style={styles.semDetalhes}>Nenhum detalhe disponível</Text>
-            )}
 
-            <TouchableOpacity
-              style={styles.fecharBtn}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.fecharText}>Fechar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </>
   );
 }
