@@ -34,9 +34,9 @@ export default function CartoesRow({ refreshKey }: { refreshKey?: any } = {}) {
     async function fetchCartoes() {
       try {
         const r = await api.get("/cartoes");
-  const cartoesData = r.data.data;
-  // Não buscar fatura aqui; CartaoCreditoCard fará o fetch e exibirá o badge
-  setCartoes(cartoesData);
+        const cartoesData = r.data.data;
+        // Não buscar fatura aqui; CartaoCreditoCard fará o fetch e exibirá o badge
+        setCartoes(cartoesData);
       } catch (err) {
         // Em produção, não exibir detalhes técnicos para o usuário
       } finally {
@@ -58,7 +58,12 @@ export default function CartoesRow({ refreshKey }: { refreshKey?: any } = {}) {
 
   function toggleCard(id: string) {
     setExpandedCards((s) => ({ ...s, [id]: !s[id] }));
-    // animate only the touched card (per-card animations handled in render)
+    pressAnim(id);
+    setTimeout(() => {
+      if (!expandedCards[id]) {
+        setExpandedCards((s) => ({ ...s, [id]: true }));
+      }
+    }, 200);
   }
 
 
@@ -129,13 +134,13 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 12,
+    paddingVertical: 12,
     alignItems: 'flex-start',
   },
   cardWrapper: {
     width: 260,
     marginRight: 12,
     borderRadius: 14,
-    // shadows
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.08,
