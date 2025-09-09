@@ -1,7 +1,6 @@
 import { Feather } from "@expo/vector-icons"; // ícone de lupa
 import { useEffect, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -11,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAlert } from "@/src/context/AlertContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { getUser } from "@/src/utils/auth";
 import api from "@/src/utils/api";
@@ -27,6 +27,7 @@ export default function CreateReceitaForm({
   onSuccess?: () => void;
 }) {
   const { createReceita, loading, error, success } = useCreateReceita();
+  const alert = useAlert();
 
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoryId, setCategoryId] = useState("");
@@ -59,7 +60,7 @@ export default function CreateReceitaForm({
     }
   }, [success, onSuccess]);
   useEffect(() => {
-    if (error) Alert.alert("Erro", error.toString());
+    if (error) alert.showAlert("Erro", error.toString());
   }, [error]);
 
   useEffect(() => {
@@ -72,7 +73,7 @@ export default function CreateReceitaForm({
         setCategorias(receitas);
       } catch (err) {
         console.error(err);
-        Alert.alert("Erro", "Não foi possível carregar as categorias");
+        alert.showAlert("Erro", "Não foi possível carregar as categorias");
       }
     }
     fetchCategorias();
@@ -96,9 +97,9 @@ export default function CreateReceitaForm({
 
   const handleSubmit = async () => {
     const user = await getUser();
-    if (!user?.id) return Alert.alert("Erro", "Usuário não encontrado");
+    if (!user?.id) return alert.showAlert("Erro", "Usuário não encontrado");
     if (!accountId || !categoryId || !description || !quantidade) {
-      return Alert.alert("Atenção", "Preencha todos os campos obrigatórios!");
+      return alert.showAlert("Atenção", "Preencha todos os campos obrigatórios!");
     }
 
     const payload: CreateReceitaInput = {

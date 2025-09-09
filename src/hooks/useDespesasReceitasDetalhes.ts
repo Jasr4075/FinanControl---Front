@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import api from "@/src/utils/api";
-import { Alert } from "react-native";
+import { useAlert } from "@/src/context/AlertContext";
 
 
 export function useDespesasDetalhes(userId: string, refreshKey?: unknown) {
   const [despesas, setDespesas] = useState<{ id: string; descricao: string; valor: number; data: string }[]>([]);
+  const alert = useAlert();
 
   useEffect(() => {
     const fetchDetalhes = async () => {
@@ -23,7 +24,7 @@ export function useDespesasDetalhes(userId: string, refreshKey?: unknown) {
       } catch (err) {
         let message = "Não foi possível carregar os detalhes de despesas.";
         if (err instanceof Error) message += `\n${err.message}`;
-        Alert.alert("Erro", message);
+  alert.showAlert("Erro", message);
       }
     };
 
@@ -37,6 +38,7 @@ export function useReceitasDetalhes(userId: string, refreshKey?: unknown) {
   const [receitas, setReceitas] = useState<{
     data: string; id: string; descricao: string; valor: number 
 }[]>([]);
+  const alert = useAlert();
 
   useEffect(() => {
     const fetchDetalhes = async () => {
@@ -55,7 +57,7 @@ export function useReceitasDetalhes(userId: string, refreshKey?: unknown) {
       } catch (err) {
         let message = "Não foi possível carregar os detalhes de receitas.";
         if (err instanceof Error) message += `\n${err.message}`;
-        Alert.alert("Erro", message);
+  alert.showAlert("Erro", message);
       }
     };
 

@@ -4,12 +4,12 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   Switch,
 } from "react-native";
+import { useAlert } from "@/src/context/AlertContext";
 import Input from "../atoms/Input";
 import { Feather } from "@expo/vector-icons";
 import api from "@/src/utils/api";
@@ -25,7 +25,7 @@ interface Props {
 const tiposConta = [
   { id: "CORRENTE", name: "Corrente" },
   { id: "POUPANCA", name: "Poupança" },
-  { id: "DINHEIRO", name: "Dinheiro" },
+  { id: "EFETIVO", name: "Dinheiro" },
 ];
 
 // Adicione essa lista no topo do arquivo
@@ -58,6 +58,7 @@ const bancosPopulares = [
 ];
 
 export default function CreateContaForm({ onClose, onSuccess }: Props) {
+  const alert = useAlert();
   const [bancoNome, setBancoNome] = useState("");
   const [agencia, setAgencia] = useState("");
   const [conta, setConta] = useState("");
@@ -86,12 +87,12 @@ export default function CreateContaForm({ onClose, onSuccess }: Props) {
       const user = await getUser();
 
       if (!user?.id) {
-        Alert.alert("Erro", "Usuário não encontrado no localStorage");
+        alert.showAlert("Erro", "Usuário não encontrado no localStorage");
         return;
       }
 
       if (!type) {
-        Alert.alert("Erro", "Selecione um tipo de conta válido.");
+        alert.showAlert("Erro", "Selecione um tipo de conta válido.");
         return;
       }
 
@@ -127,14 +128,14 @@ export default function CreateContaForm({ onClose, onSuccess }: Props) {
             dueDay: parseInt(dueDay, 10),
           });
           cartaoCriadoId = "ok";
-        } catch (e) {
+          } catch (e) {
           let message = "Conta criada, mas falhou ao criar cartão.";
           if (e instanceof Error) message += `\n${e.message}`;
-          Alert.alert("Aviso", message);
+          alert.showAlert("Aviso", message);
         }
       }
 
-      Alert.alert(
+      alert.showAlert(
         "Sucesso",
         `Conta criada${
           criarCartao ? (cartaoCriadoId ? " + cartão" : " (cartão falhou)") : ""
@@ -144,9 +145,9 @@ export default function CreateContaForm({ onClose, onSuccess }: Props) {
       onSuccess?.();
       onClose();
     } catch (error) {
-      let message = "Não foi possível criar a conta.";
-      if (error instanceof Error) message += `\n${error.message}`;
-      Alert.alert("Erro", message);
+  let message = "Não foi possível criar a conta.";
+  if (error instanceof Error) message += `\n${error.message}`;
+  alert.showAlert("Erro", message);
     }
   };
 

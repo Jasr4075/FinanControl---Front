@@ -80,15 +80,45 @@ const colorPorPercent = (percent: number) => {
 };
 
 
-export default function CartaoCreditoCard({ cartaoId }: { cartaoId: string }) {
+export default function CartaoCreditoCard({ cartaoId, showInlineDetails = false }: { cartaoId: string; showInlineDetails?: boolean }) {
   const [resumo, setResumo] = useState<CartaoResumo | null>(null);
   const [detalhe, setDetalhe] = useState<FaturaDetalhe | null>(null);
+  const [valorFaturaAtual, setValorFaturaAtual] = useState<number | null>(null);
   const [mes, setMes] = useState<number | null>(null);
   const [ano, setAno] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [loadingResumo, setLoadingResumo] = useState(false);
   const [loadingFatura, setLoadingFatura] = useState(false);
   const cache = useRef<Map<string, FaturaDetalhe>>(new Map());
+  // fetch current invoice (fatura) with caching to avoid duplicate calls
+  const fetchFaturaAtual = useCallback(async () => {
+    // If we already have a cached current fatura, reuse it
+    if (cache.current.has('current')) {
+      const det = cache.current.get('current')!;
+      setDetalhe(det);
+      setMes(det.fatura.mes);
+      setAno(det.fatura.ano);
+      setValorFaturaAtual(Number(det.fatura.valorTotal));
+      return det;
+    }
+    setLoadingFatura(true);
+    try {
+      const r = await api.get(`/faturas/cartao/${cartaoId}/atual`);
+      const det = normalizeDetalhe(r.data.data);
+      cache.current.set(key(det.fatura.mes, det.fatura.ano), det);
+      cache.current.set('current', det);
+      setDetalhe(det);
+      setMes(det.fatura.mes);
+      setAno(det.fatura.ano);
+      setValorFaturaAtual(Number(det.fatura.valorTotal));
+      return det;
+    } catch (e) {
+      setValorFaturaAtual(0);
+      return null;
+    } finally {
+      setLoadingFatura(false);
+    }
+  }, [cartaoId]);
 
   useEffect(() => {
     let mounted = true;
@@ -104,7 +134,11 @@ export default function CartaoCreditoCard({ cartaoId }: { cartaoId: string }) {
         setLoadingResumo(false);
       }
     })();
-  }, [cartaoId]);
+    // ensure current fatura is fetched once and cached (badge + inline + modal will reuse)
+    (async () => {
+      await fetchFaturaAtual();
+    })();
+  }, [cartaoId, fetchFaturaAtual]);
 
   const normalizeResumo = (d: any): CartaoResumo => ({
     ...d,
@@ -131,21 +165,7 @@ export default function CartaoCreditoCard({ cartaoId }: { cartaoId: string }) {
     },
   });
 
-  const fetchFaturaAtual = useCallback(async () => {
-    setLoadingFatura(true);
-    try {
-      const r = await api.get(`/faturas/cartao/${cartaoId}/atual`);
-      const det = normalizeDetalhe(r.data.data);
-      cache.current.set(key(det.fatura.mes, det.fatura.ano), det);
-      setDetalhe(det);
-      setMes(det.fatura.mes);
-      setAno(det.fatura.ano);
-    } catch (e) {
-      // Em produção, não exibir detalhes técnicos para o usuário
-    } finally {
-      setLoadingFatura(false);
-    }
-  }, [cartaoId]);
+  // removed duplicate fetch (replaced by cached fetchFaturaAtual above)
 
   const fetchFaturaMes = useCallback(
     async (m: number, a: number) => {
@@ -189,6 +209,13 @@ export default function CartaoCreditoCard({ cartaoId }: { cartaoId: string }) {
     if (!detalhe) fetchFaturaAtual();
   };
 
+  // when parent requests inline details, ensure fatura is loaded
+  useEffect(() => {
+    if (showInlineDetails && !detalhe) {
+      fetchFaturaAtual();
+    }
+  }, [showInlineDetails, detalhe, fetchFaturaAtual]);
+
   const navegar = (dir: -1 | 1) => {
     if (mes == null || ano == null) return;
     fetchFaturaMes(mes + dir, ano);
@@ -209,6 +236,12 @@ export default function CartaoCreditoCard({ cartaoId }: { cartaoId: string }) {
   return (
     <>
       <Card style={styles.card}>
+        {/* badge de valor da fatura atual */}
+        {valorFaturaAtual != null && (
+          <View style={styles.smallBadge}>
+            <Text style={styles.smallBadgeText}>{currency(valorFaturaAtual)}</Text>
+          </View>
+        )}
         <Text style={styles.title}>{resumo.nome}</Text>
         {resumo.conta && (
           <Text style={styles.sub}>
@@ -237,6 +270,10 @@ export default function CartaoCreditoCard({ cartaoId }: { cartaoId: string }) {
           </Text>
           <Text style={styles.usado}>Usado: {currency(resumo.creditUsed)}</Text>
         </View>
+        {/* thin progress reflecting percentUsed */}
+        <View style={styles.thinProgressContainer}>
+          <View style={[styles.thinProgressFill, { width: `${Math.min(100, resumo.percentUsed)}%`, backgroundColor: colorPorPercent(resumo.percentUsed) }]} />
+        </View>
         <Text style={styles.limite}>
           Limite: {currency(resumo.creditLimit)}
         </Text>
@@ -244,6 +281,22 @@ export default function CartaoCreditoCard({ cartaoId }: { cartaoId: string }) {
         <TouchableOpacity onPress={abrirModal} style={styles.detalhesBtn}>
           <Text style={styles.detalhesText}>Ver fatura atual</Text>
         </TouchableOpacity>
+        {/* inline quick details when requested by parent */}
+        {showInlineDetails && (
+          <View style={styles.inlineBox}>
+            {loadingFatura && !detalhe ? (
+              <ActivityIndicator size="small" color="#4a90e2" />
+            ) : detalhe ? (
+              <>
+                <Text style={styles.inlineTitle}>Fatura {detalhe.fatura.mes}/{detalhe.fatura.ano}</Text>
+                <Text style={styles.inlineText}>Total: {currency(Number(detalhe.fatura.valorTotal))}</Text>
+                <Text style={styles.inlineText}>Restante: {currency(detalhe.resumo.restante)}</Text>
+              </>
+            ) : (
+              <Text style={styles.inlineText}>Nenhuma fatura</Text>
+            )}
+          </View>
+        )}
       </Card>
 
       <Modal
@@ -477,6 +530,47 @@ const styles = StyleSheet.create({
   detalheData: {
     fontSize: 12,
     color: "#888",
+  },
+  smallBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+    backgroundColor: '#0066cc',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 5,
+  },
+  smallBadgeText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  thinProgressContainer: {
+    height: 6,
+    backgroundColor: '#eef5ff',
+    borderRadius: 6,
+    overflow: 'hidden',
+    marginTop: 10,
+    marginBottom: 8,
+  },
+  thinProgressFill: {
+    height: '100%',
+  },
+  inlineBox: {
+    marginTop: 10,
+    backgroundColor: '#f7fbff',
+    padding: 8,
+    borderRadius: 8,
+  },
+  inlineTitle: {
+    fontWeight: '700',
+    color: '#004a99',
+  },
+  inlineText: {
+    color: '#333',
+    fontSize: 13,
+    marginTop: 4,
   },
   
 });

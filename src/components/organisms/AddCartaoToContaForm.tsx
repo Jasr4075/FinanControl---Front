@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { useAlert } from "@/src/context/AlertContext";
 import { Feather } from '@expo/vector-icons';
 import Input from "@/src/components/atoms/Input";
 import api from "@/src/utils/api";
@@ -20,22 +21,24 @@ export default function AddCartaoToContaForm({ contaId, onSuccess, onClose }: Ad
   const [icone, setIcone] = useState("credit-card");
   const [loading, setLoading] = useState(false);
 
+  const alert = useAlert();
+
   async function handleSubmit() {
     if (!nome.trim()) {
-      Alert.alert("Preencha o nome do cartão");
+      alert.showAlert("Atenção", "Preencha o nome do cartão");
       return;
     }
     if (!tipo) {
-      Alert.alert("Selecione o tipo do cartão");
+      alert.showAlert("Atenção", "Selecione o tipo do cartão");
       return;
     }
     if ((tipo === "CREDITO" || tipo === "MISTO")) {
       if (!closingDay || isNaN(Number(closingDay))) {
-        Alert.alert("Informe o dia de fechamento válido (1-28)");
+        alert.showAlert("Atenção", "Informe o dia de fechamento válido (1-28)");
         return;
       }
       if (!dueDay || isNaN(Number(dueDay))) {
-        Alert.alert("Informe o dia de vencimento válido (1-28)");
+        alert.showAlert("Atenção", "Informe o dia de vencimento válido (1-28)");
         return;
       }
     }
@@ -51,13 +54,13 @@ export default function AddCartaoToContaForm({ contaId, onSuccess, onClose }: Ad
         cor,
         icone,
       });
-      Alert.alert("Sucesso", "Cartão vinculado à conta!");
+  alert.showAlert("Sucesso", "Cartão vinculado à conta!");
       onSuccess?.();
       onClose();
     } catch (e) {
       let msg = "Não foi possível adicionar o cartão.";
       if (e instanceof Error) msg += `\n${e.message}`;
-      Alert.alert("Erro", msg);
+  alert.showAlert("Erro", msg);
     } finally {
       setLoading(false);
     }

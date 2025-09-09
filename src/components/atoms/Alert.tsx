@@ -34,7 +34,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.confirmBtn} onPress={onConfirm}>
-              <Text style={styles.confirmText}>Confirmar</Text>
+              <Text style={styles.confirmText}>Ok</Text>
             </TouchableOpacity>
           </View>
         </View>

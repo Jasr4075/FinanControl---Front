@@ -17,6 +17,7 @@ import { Feather } from "@expo/vector-icons";
 import { Conta, Categoria, CreateDespesaInput } from "../../types/types";
 import Input from "../atoms/Input";
 import CustomAlert from "../atoms/Alert";
+import { useAlert } from "@/src/context/AlertContext";
 import { formatCurrency, parseCurrencyToNumber } from "../../utils/formatCurrency";
 
 export default function CreateDespesaForm({
@@ -51,9 +52,7 @@ export default function CreateDespesaForm({
   const [searchCategoria, setSearchCategoria] = useState("");
   const [searchConta, setSearchConta] = useState("");
 
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertTitle, setAlertTitle] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
+  const alert = useAlert();
 
   const handleChange = (text: string) => {
     if (!text) {
@@ -67,12 +66,7 @@ export default function CreateDespesaForm({
   };
   
 
-  //Mostrar alerta: 
-  const showAlert = (title: string, message: string) => {
-    setAlertTitle(title);
-    setAlertMessage(message);
-    setAlertVisible(true);
-  };
+  // usando alert global (useAlert)
 
   // filtra só pelo search, já que categorias já é só DESPESA
   const categoriasFiltradas = categorias.filter((cat) =>
@@ -91,9 +85,9 @@ export default function CreateDespesaForm({
 
     useEffect(() => {
       if (success) {
-        showAlert("Sucesso!", "Despesa criada com sucesso!");
-        onSuccess?.();
-      }
+          alert.showAlert("Sucesso!", "Despesa criada com sucesso!");
+          onSuccess?.();
+        }
     }, [success, onSuccess]);
     
     
@@ -122,7 +116,7 @@ export default function CreateDespesaForm({
         setCategorias(despesas);
       } catch (err) {
         console.error(err);
-        showAlert("Erro", "Não foi possível carregar as categorias");
+  alert.showAlert("Erro", "Não foi possível carregar as categorias");
       }
     }
     fetchCategorias();
@@ -147,7 +141,7 @@ export default function CreateDespesaForm({
           setContas(contasData);
         }
       } catch {
-        showAlert("Erro", "Não foi possível carregar as contas");
+  alert.showAlert("Erro", "Não foi possível carregar as contas");
       }
     }
     fetchContas();
@@ -164,9 +158,9 @@ export default function CreateDespesaForm({
   // Submit
   const handleSubmit = async () => {
     const user = await getUser();
-    if (!user?.id) return showAlert("Erro", "Usuário não encontrado!");
+    if (!user?.id) return alert.showAlert("Erro", "Usuário não encontrado!");
     if (!descricao || !valor || !contaSelecionada || !categoryId)
-      showAlert("Atenção", "Preencha todos os campos obrigatórios!");
+      alert.showAlert("Atenção", "Preencha todos os campos obrigatórios!");
 
     const isCredito = metodoPagamento === "CREDITO";
     const payload: CreateDespesaInput = {
@@ -187,7 +181,7 @@ export default function CreateDespesaForm({
     } catch (e) {
       let message = "Não foi possível criar a despesa. Tente novamente.";
       if (e instanceof Error) message += `\n${e.message}`;
-      showAlert("Erro", message);
+  alert.showAlert("Erro", message);
     }
   };
 
@@ -436,13 +430,7 @@ export default function CreateDespesaForm({
           </Text>
         </TouchableOpacity>
       </ScrollView>
-      <CustomAlert
-        visible={alertVisible}
-        title={alertTitle}
-        message={alertMessage}
-        onConfirm={() => setAlertVisible(false)}
-        onCancel={() => setAlertVisible(false)}
-      />
+  {/* global CustomAlert provided by AlertProvider will handle alerts */}
 
     </KeyboardAvoidingView>
   );

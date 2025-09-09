@@ -7,13 +7,13 @@ import api from "@/src/utils/api";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   StyleSheet,
   Text,
   View,
   RefreshControl,
 } from "react-native";
+import { useAlert } from "@/src/context/AlertContext";
 import { useRouter } from "expo-router";
 import { Conta, Movimentacao } from "../../src/types/types";
 
@@ -29,6 +29,7 @@ export default function Home() {
   const router = useRouter();
   const { user } = useAuthUser();
   const userId = user?.id || "";
+  const alert = useAlert();
 
   const receitas = useReceitasMes(userId, totaisRefreshKey);
   const despesas = useDespesasMes(userId, totaisRefreshKey);
@@ -106,7 +107,7 @@ export default function Home() {
       } catch (err) {
         console.log(err);
         if (isMountedRef.current)
-          Alert.alert("Erro", "Não foi possível carregar os dados.");
+          alert.showAlert("Erro", "Não foi possível carregar os dados.");
       } finally {
         if (isMountedRef.current) {
           setLoading(false);

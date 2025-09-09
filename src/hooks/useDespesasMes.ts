@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import api from "@/src/utils/api";
-import { Alert } from "react-native";
+import { useAlert } from "@/src/context/AlertContext";
 
 export default function useDespesasMes(userId: string, refreshKey?: unknown) {
   const [total, setTotal] = useState(0);
+  const alert = useAlert();
 
   useEffect(() => {
     const fetchDespesas = async () => {
@@ -16,7 +17,7 @@ export default function useDespesasMes(userId: string, refreshKey?: unknown) {
       } catch (err) {
         let message = "Não foi possível carregar o total de despesas.";
         if (err instanceof Error) message += `\n${err.message}`;
-        Alert.alert("Erro", message);
+    alert.showAlert("Erro", message);
       }
     };
 

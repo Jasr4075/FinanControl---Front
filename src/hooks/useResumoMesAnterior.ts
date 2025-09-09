@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '@/src/utils/api'
-import { Alert } from 'react-native'
+import { useAlert } from '@/src/context/AlertContext'
 
 interface TotaisMes {
   atual: number
@@ -9,6 +9,7 @@ interface TotaisMes {
 
 export function useTotaisReceitas(userId: string) : TotaisMes {
   const [state, setState] = useState<TotaisMes>({ atual: 0, anterior: 0 })
+  const alert = useAlert();
   useEffect(() => {
     if (!userId) return
     const now = new Date()
@@ -31,7 +32,7 @@ export function useTotaisReceitas(userId: string) : TotaisMes {
       } catch (e) {
         let message = 'Falha ao carregar totais de receitas.';
         if (e instanceof Error) message += `\n${e.message}`;
-        if (!cancel) Alert.alert('Erro', message);
+  if (!cancel) alert.showAlert('Erro', message);
       }
     }
     load()
@@ -42,6 +43,7 @@ export function useTotaisReceitas(userId: string) : TotaisMes {
 
 export function useTotaisDespesas(userId: string) : TotaisMes {
   const [state, setState] = useState<TotaisMes>({ atual: 0, anterior: 0 })
+  const alert = useAlert();
   useEffect(() => {
     if (!userId) return
     const now = new Date()
@@ -63,7 +65,7 @@ export function useTotaisDespesas(userId: string) : TotaisMes {
       } catch (e) {
         let message = 'Falha ao carregar totais de despesas.';
         if (e instanceof Error) message += `\n${e.message}`;
-        if (!cancel) Alert.alert('Erro', message);
+  if (!cancel) alert.showAlert('Erro', message);
       }
     }
     load()
