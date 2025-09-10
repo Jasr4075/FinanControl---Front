@@ -6,6 +6,6 @@ export type CartaoResumo = {
     creditUsed: number;
     available: number;
     percentUsed: number;
-    conta?: { conta: string; bancoNome: string; agencia: string };
+    conta?: { conta: string; bancoNome: string; agencia: string, saldo?: number; };
   };
   
