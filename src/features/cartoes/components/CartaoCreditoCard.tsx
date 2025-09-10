@@ -1,80 +1,34 @@
-// src/molecules/CartaoCreditoCard.tsx
 import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Text,
   StyleSheet,
   View,
-  Modal,
   TouchableOpacity,
-  FlatList,
   ActivityIndicator,
 } from "react-native";
-import Card from "../atoms/Card";
-import api from "../../utils/api";
+import Card from "../../../components/atoms/Card";
+import api from "../../../utils/api";
+import FaturaModal from "../../faturas/components/FaturaModal";
+import { CartaoResumo } from "../types";
+import { FaturaDetalhe } from "../../faturas/types";
 
-// ================= Tipos =================
-type CartaoResumo = {
-  id: string;
-  nome: string;
-  type: string;
-  creditLimit: number;
-  creditUsed: number;
-  available: number;
-  percentUsed: number;
-  conta?: { conta: string; bancoNome: string; agencia: string };
-};
-
-type ParcelaApi = {
-  id: string;
-  numeroParcela: number;
-  valor: number | string;
-  dataVencimento: string;
-  paga: boolean;
-  dataPagamento: string | null;
-  despesa: {
-    id: string;
-    descricao: string;
-    valor: number | string;
-    metodoPagamento: string;
-    data: string;
-  };
-};
-
-type FaturaDetalhe = {
-  fatura: {
-    id: string;
-    cartaoId: string;
-    mes: number;
-    ano: number;
-    valorTotal: number | string;
-    valorPago: number | string;
-    paga: boolean;
-    parcelas: ParcelaApi[];
-  };
-  resumo: { restante: number; percentPago: number };
-};
-
-// ================= Helpers =================
 const currency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pct = (n: number) => `${n.toFixed(1)}%`;
 const key = (m: number, a: number) => `${a}-${m}`;
 
 const colorPorPercent = (percent: number) => {
-  // Limitar entre 0 y 100
   const p = Math.min(100, Math.max(0, percent));
 
   if (p < 50) {
-    // De verde a amarillo
-    const r = Math.round((p / 50) * 255); // 0 → 255
-    const g = 196; // verde base
-    const b = 80; // azul bajo
+    const r = Math.round((p / 50) * 255);
+    const g = 196;
+    const b = 80;
     return `rgb(${r}, ${g}, ${b})`;
   } else {
-    // De amarillo a rojo
     const r = 255;
-    const g = Math.round(196 - ((p - 50) / 50) * 196); // 196 → 0
-    const b = Math.round(80 - ((p - 50) / 50) * 80); // 80 → 0
+    const g = Math.round(196 - ((p - 50) / 50) * 196);
+    const b = Math.round(80 - ((p - 50) / 50) * 80);
     return `rgb(${r}, ${g}, ${b})`;
   }
 };
@@ -90,9 +44,7 @@ export default function CartaoCreditoCard({ cartaoId, showInlineDetails = false 
   const [loadingResumo, setLoadingResumo] = useState(false);
   const [loadingFatura, setLoadingFatura] = useState(false);
   const cache = useRef<Map<string, FaturaDetalhe>>(new Map());
-  // fetch current invoice (fatura) with caching to avoid duplicate calls
   const fetchFaturaAtual = useCallback(async () => {
-    // If we already have a cached current fatura, reuse it
     if (cache.current.has('current')) {
       const det = cache.current.get('current')!;
       setDetalhe(det);
@@ -128,13 +80,11 @@ export default function CartaoCreditoCard({ cartaoId, showInlineDetails = false 
         const r = await api.get(`/cartoes/${cartaoId}/resumo`);
         if (mounted) setResumo(normalizeResumo(r.data.data));
       } catch (e) {
-        // Em produção, não exibir detalhes técnicos para o usuário
       } finally {
         mounted = false;
         setLoadingResumo(false);
       }
     })();
-    // ensure current fatura is fetched once and cached (badge + inline + modal will reuse)
     (async () => {
       await fetchFaturaAtual();
     })();
@@ -165,7 +115,6 @@ export default function CartaoCreditoCard({ cartaoId, showInlineDetails = false 
     },
   });
 
-  // removed duplicate fetch (replaced by cached fetchFaturaAtual above)
 
   const fetchFaturaMes = useCallback(
     async (m: number, a: number) => {
@@ -196,7 +145,6 @@ export default function CartaoCreditoCard({ cartaoId, showInlineDetails = false 
         setMes(m);
         setAno(a);
       } catch (e) {
-        // Em produção, não exibir detalhes técnicos para o usuário
       } finally {
         setLoadingFatura(false);
       }
@@ -209,7 +157,6 @@ export default function CartaoCreditoCard({ cartaoId, showInlineDetails = false 
     if (!detalhe) fetchFaturaAtual();
   };
 
-  // when parent requests inline details, ensure fatura is loaded
   useEffect(() => {
     if (showInlineDetails && !detalhe) {
       fetchFaturaAtual();
@@ -299,105 +246,15 @@ export default function CartaoCreditoCard({ cartaoId, showInlineDetails = false 
         )}
       </Card>
 
-      <Modal
-  visible={modalVisible}
-  transparent
-  animationType="fade"
-  onRequestClose={() => setModalVisible(false)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContent}>
-      {loadingFatura && !detalhe && (
-        <ActivityIndicator size="large" color="#4a90e2" />
-      )}
-      {detalhe && (
-        <>
-          {/* Header estilizado */}
-          <View style={styles.headerBox}>
-            <Text style={styles.modalTitle}>
-              Fatura {mes}/{ano}
-            </Text>
-            <Text style={styles.valorRestante}>
-              {currency(detalhe.resumo.restante)}
-            </Text>
-            <Text style={styles.valorLegenda}>Valor a pagar</Text>
-          </View>
-
-          {/* Resumo */}
-          <Text style={styles.resumo}>
-            Total: {currency(Number(detalhe.fatura.valorTotal))} | Pago:{" "}
-            {currency(Number(detalhe.fatura.valorPago))} | Restante:{" "}
-            {currency(detalhe.resumo.restante)} (
-            {pct(detalhe.resumo.percentPago)})
-          </Text>
-
-          {/* Lista de parcelas */}
-          <FlatList
-            data={detalhe.fatura.parcelas}
-            keyExtractor={(p) => p.id}
-            style={{ maxHeight: 300, marginBottom: 12 }}
-            ListEmptyComponent={
-              <Text style={{ textAlign: "center", color: "#666" }}>
-                Sem parcelas
-              </Text>
-            }
-            renderItem={({ item }) => (
-              <View style={styles.detalheItem}>
-                <View>
-                  <Text style={styles.detalheDescricao}>
-                    {item.numeroParcela}. {item.despesa.descricao}
-                  </Text>
-                  <Text style={styles.detalheData}>
-                    Venc: {item.dataVencimento}
-                  </Text>
-                </View>
-                <Text
-                  style={[
-                    styles.detalheValor,
-                    item.paga && { color: "#4caf50" },
-                  ]}
-                >
-                  {currency(Number(item.valor))}
-                </Text>
-              </View>
-            )}
-          />
-
-          {/* Navegação */}
-          <View style={styles.navBtns}>
-            <TouchableOpacity
-              style={styles.navBtn}
-              onPress={() => navegar(-1)}
-            >
-              <Text style={styles.navText}>{"<"} Anterior</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.navBtn}
-              onPress={() => navegar(1)}
-            >
-              <Text style={styles.navText}>Próxima {">"}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Botão fechar */}
-          <TouchableOpacity
-            style={styles.fecharBtn}
-            onPress={() => setModalVisible(false)}
-          >
-            <Text style={{ color: "#fff", fontWeight: "bold" }}>
-              Fechar
-            </Text>
-          </TouchableOpacity>
-        </>
-      )}
-      {!loadingFatura && !detalhe && (
-        <Text style={{ textAlign: "center", color: "#555" }}>
-          Nenhuma fatura disponível
-        </Text>
-      )}
-    </View>
-  </View>
-</Modal>
+      <FaturaModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        detalhe={detalhe}
+        loading={loadingFatura}
+        mes={mes}
+        ano={ano}
+        navegar={navegar}
+      />
 
     </>
   );
@@ -444,6 +301,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginVertical: 8,
+    flexWrap: "wrap",
   },
   limite: { fontSize: 14, color: "#555" },
   usado: { fontSize: 14, color: "#ff6b6b" },
@@ -456,81 +314,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   detalhesText: { color: "#fff", fontWeight: "600", fontSize: 14 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "center",
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 24,
-    maxHeight: "85%",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  resumo: {
-    fontSize: 14,
-    marginBottom: 12,
-    color: "#555",
-    textAlign: "center",
-  },
-  detalheItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    borderBottomWidth: 0.3,
-    borderBottomColor: "#ddd",
-  },
-  detalheDescricao: { fontSize: 14, color: "#333" },
-  detalheValor: { fontSize: 14, fontWeight: "600", color: "#222" },
-  navBtns: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 14,
-  },
-  navBtn: {
-    flex: 1,
-    backgroundColor: "#f2f2f2",
-    paddingVertical: 10,
-    marginHorizontal: 5,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  navText: { fontWeight: "600", color: "#4a90e2" },
-  fecharBtn: {
-    marginTop: 16,
-    backgroundColor: "#4a90e2",
-    paddingVertical: 12,
-    borderRadius: 16,
-    alignItems: "center",
-  },
-  headerBox: {
-    backgroundColor: "#f5f9ff",
-    borderRadius: 16,
-    padding: 16,
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  valorRestante: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#e53935",
-    marginTop: 4,
-  },
-  valorLegenda: {
-    fontSize: 13,
-    color: "#666",
-  },
-  detalheData: {
-    fontSize: 12,
-    color: "#888",
-  },
+
   smallBadge: {
     position: 'absolute',
     top: 10,
@@ -572,5 +356,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 4,
   },
-  
+
 });

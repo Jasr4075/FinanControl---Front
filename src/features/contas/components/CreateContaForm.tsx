@@ -10,11 +10,11 @@ import {
   Switch,
 } from "react-native";
 import { useAlert } from "@/src/context/AlertContext";
-import Input from "../atoms/Input";
+import Input from "../../../components/atoms/Input";
 import { Feather } from "@expo/vector-icons";
 import api from "@/src/utils/api";
-import { Conta } from "../../types/types";
-import { getUser } from "@/src/utils/auth";
+import { Conta } from "../types";
+import { getUser } from "@/src/features/auth/auth";
 
 interface Props {
   conta?: Conta | null;
@@ -28,7 +28,6 @@ const tiposConta = [
   { id: "EFETIVO", name: "Dinheiro" },
 ];
 
-// Adicione essa lista no topo do arquivo
 const bancosPopulares = [
   "Banco do Brasil",
   "Picpay",

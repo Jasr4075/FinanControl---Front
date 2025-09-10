@@ -1,6 +1,5 @@
 import { Link } from "expo-router";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
-import useRedirectIfAuth from "@/src/hooks/useRedirectIfAuth";
 
 export default function Index() {
   return (

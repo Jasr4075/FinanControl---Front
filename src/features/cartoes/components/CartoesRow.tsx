@@ -1,4 +1,3 @@
-// src/organisms/CartoesRow.tsx
 import { useEffect, useState, useRef } from "react";
 import {
   View,
@@ -11,8 +10,8 @@ import {
   Easing,
   Dimensions,
 } from "react-native";
-import CartaoCreditoCard from "../molecules/CartaoCreditoCard";
-import api from "../../utils/api";
+import CartaoCreditoCard from "./CartaoCreditoCard";
+import api from "../../../utils/api";
 
 type Cartao = {
   id: string;

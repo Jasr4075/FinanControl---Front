@@ -1,6 +1,6 @@
 import { useState } from "react";
 import api from "@/src/utils/api";
-import { CreateReceitaInput } from "../types/types";
+import { CreateReceitaInput } from "../types";
 
 interface UseCreateReceitaReturn {
   createReceita: (input: CreateReceitaInput) => Promise<void>;

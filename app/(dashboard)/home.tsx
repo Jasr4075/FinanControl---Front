@@ -1,8 +1,10 @@
 import ActionButtonsRow from "@/src/components/organisms/ActionButtonsRow";
-import ContasList from "@/src/components/organisms/ContasList";
+import ContasList from "@/src/features/contas/components/ContasList";
 import MovimentacoesList from "@/src/components/organisms/MovimentacoesList";
 import ResumoFinanceiro from "@/src/components/organisms/ResumoFinanceiro";
-import { useAuthUser, useDespesasMes, useReceitasMes } from "@/src/hooks";
+import useAuthUser from "@/src/features/auth/useAuthUser";
+import useDespesasMes from "@/src/features/despesas/hooks/useDespesasMes";
+import useReceitasMes from "@/src/features/receitas/hooks/useReceitasMes";
 import api from "@/src/utils/api";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
@@ -15,7 +17,8 @@ import {
 } from "react-native";
 import { useAlert } from "@/src/context/AlertContext";
 import { useRouter } from "expo-router";
-import { Conta, Movimentacao } from "../../src/types/types";
+import { Conta } from "../../src/features/contas/types";
+import { Movimentacao } from "../../src/types/common";
 
 export default function Home() {
   const [contas, setContas] = useState<Conta[]>([]);

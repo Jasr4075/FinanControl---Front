@@ -1,8 +1,7 @@
-// src/hooks/useUltimasDespesas.ts
 import { useEffect, useState } from "react";
-import api from "../utils/api";
-import { getUser } from "../utils/auth";
-import { Movimentacao } from "../types/types";
+import api from "../../../utils/api";
+import { getUser } from "../../auth/auth";
+import { Movimentacao } from "@/src/types/common";
 
 export function useUltimasDespesas() {
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);

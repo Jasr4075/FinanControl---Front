@@ -1,6 +1,6 @@
 import { useState } from "react";
 import api from "@/src/utils/api";
-import { CreateDespesaInput } from "../types/types";
+import { CreateDespesaInput } from "../types";
 
 interface UseCreateDespesaReturn {
   createDespesa: (input: CreateDespesaInput) => Promise<void>;

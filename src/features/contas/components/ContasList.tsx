@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Text, TouchableOpacity, View, Modal, StyleSheet, FlatList } from "react-native";
-import Card from "../atoms/Card";
-import ContaItem from "../molecules/ContaItem";
+import Card from "../../../components/atoms/Card";
+import ContaItem from "./ContaItem";
 import { Feather } from "@expo/vector-icons";
-import CreateContaForm from "../organisms/CreateContaForm";
-import { Conta } from "../../types/types";
-import api from "../../utils/api";
-import AddCartaoToContaForm from "../organisms/AddCartaoToContaForm";
-import CustomAlert from "../atoms/Alert";
+import CreateContaForm from "@/src/features/contas/components/CreateContaForm";
+import { Conta } from "../types";
+import api from "../../../utils/api";
+import AddCartaoToContaForm from "./AddCartaoToContaForm";
+import CustomAlert from "../../../components/atoms/Alert";
 
 type ContasListProps = {
   contas: Conta[];

@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Input from "@/src/components/atoms/Input";
-import { useAuthUser } from "@/src/hooks";
+import useAuthUser from "@/src/features/auth/useAuthUser";
 import { useRouter } from "expo-router";
 import api from "@/src/utils/api";
 import { useAlert } from "@/src/context/AlertContext";

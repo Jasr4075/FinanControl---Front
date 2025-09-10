@@ -9,10 +9,10 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { saveToken, saveUser } from "@/src/utils/auth";
+import { saveToken, saveUser } from "@/src/features/auth/auth";
 import api from "@/src/utils/api";
 import { Feather } from "@expo/vector-icons";
-import useRedirectIfAuth from "@/src/hooks/useRedirectIfAuth";
+import useRedirectIfAuth from "@/src/features/auth/useRedirectIfAuth";
 
 export default function LoginScreen() {
   const router = useRouter();

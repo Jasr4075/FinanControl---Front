@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { isAuthenticated, validateToken, getUser, clearAuth } from "@/src/utils/auth";
-import { ValidRedirectPaths, UseRedirectIfAuthOptions } from "../types/types";
+import { isAuthenticated, validateToken, getUser, clearAuth } from "@/src/features/auth/auth";
+import { ValidRedirectPaths, UseRedirectIfAuthOptions } from "../auth/types";
 
 export default function useRedirectIfAuth(options: UseRedirectIfAuthOptions = {}) {
   const {

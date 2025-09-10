@@ -1,4 +1,3 @@
-// src/utils/formatCurrency.ts
 
 /**
  * Formata uma string numérica para o padrão brasileiro (milhar com ponto e decimal com vírgula)

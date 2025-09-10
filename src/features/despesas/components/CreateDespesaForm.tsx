@@ -1,6 +1,6 @@
-import { useCreateDespesa } from "@/src/hooks/useCreateDespesa";
+import { useCreateDespesa } from "@/src/features/despesas/hooks/useCreateDespesa";
 import api from "@/src/utils/api";
-import { getUser } from "@/src/utils/auth";
+import { getUser } from "@/src/features/auth/auth";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useEffect, useState } from "react";
 import {
@@ -14,11 +14,12 @@ import {
   View,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Conta, Categoria, CreateDespesaInput } from "../../types/types";
-import Input from "../atoms/Input";
-import CustomAlert from "../atoms/Alert";
+import { CreateDespesaInput } from "../types";
+import {Conta} from "@/src/features/contas/types"
+import { Categoria } from "@/src/types/common"
+import Input from "../../../components/atoms/Input";
 import { useAlert } from "@/src/context/AlertContext";
-import { formatCurrency, parseCurrencyToNumber } from "../../utils/formatCurrency";
+import { formatCurrency, parseCurrencyToNumber } from "../../../utils/formatCurrency";
 
 export default function CreateDespesaForm({
   contaId,

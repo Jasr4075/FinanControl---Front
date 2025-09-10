@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
-import useRedirectIfAuth from "@/src/hooks/useRedirectIfAuth";
+import useRedirectIfAuth from "@/src/features/auth/useRedirectIfAuth";
 import Input from "../../src/components/atoms/Input";
 import CustomAlert from "../../src/components/atoms/Alert";
 

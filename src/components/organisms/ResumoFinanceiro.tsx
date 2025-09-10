@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import SaldoTotalCard from "../molecules/SaldoTotalCard";
 import ReceitasDespesasRow from "./ReceitasDespesasRow";
-import CartoesRow from "./CartoesRow";
+import CartoesRow from "../../features/cartoes/components/CartoesRow";
 
 export default function ResumoFinanceiro({
   saldo,

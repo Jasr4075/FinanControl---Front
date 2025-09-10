@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Modal, StyleSheet, View } from "react-native";
 import ActionButton from "../atoms/ActionButton";
-import CreateDespesaForm from "../molecules/CreateDespesaForm";
-import CreateReceitaForm from "../molecules/CreateReceitaForm";
+import CreateDespesaForm from "../../features/despesas/components/CreateDespesaForm";
+import CreateReceitaForm from "../../features/receitas/components/CreateReceitaForm";
 
 export default function ActionButtonsRow({ onUpdateData }: { onUpdateData: () => void }) {
   const [modalDespesaVisible, setModalDespesaVisible] = useState(false);

@@ -1,7 +1,7 @@
 import { View, StyleSheet } from "react-native";
-import ReceitaDespesaCard from "../molecules/ReceitaDespesaCard";
+import ReceitasCard from "../../features/receitas/components/ReceitaCard";
+import DespesasCard from "../../features/despesas/components/DespesaCard";
 import { useTotaisReceitas, useTotaisDespesas } from "@/src/hooks/useResumoMesAnterior";
-import { useDespesasDetalhes, useReceitasDetalhes } from "../../hooks/useDespesasReceitasDetalhes";
 
 type Props = {
   userId?: string;
@@ -30,25 +30,17 @@ export default function ReceitasDespesasRow({
   const receitasAnterior = receitasHook ? receitasHook.anterior : (receitasMesAnterior ?? 0);
   const despesasAtual = despesasHook ? despesasHook.atual : (despesas ?? 0);
   const despesasAnterior = despesasHook ? despesasHook.anterior : (despesasMesAnterior ?? 0);
-  const despesasDetalhes = autoFetch && userId ? useDespesasDetalhes(userId) : [];
-  const receitasDetalhes = autoFetch && userId ? useReceitasDetalhes(userId) : [];
 
   return (
     <View style={styles.row}>
-      <ReceitaDespesaCard
-        titulo="Receitas"
+      <ReceitasCard
         valor={receitasAtual}
-        cor="green"
         previousMonthValue={receitasAnterior}
-        detalhes={receitasDetalhes}
       />
 
-      <ReceitaDespesaCard
-        titulo="Despesas"
+      <DespesasCard
         valor={despesasAtual}
-        cor="red"
         previousMonthValue={despesasAnterior}
-        detalhes={despesasDetalhes}
       />
     </View>
   );

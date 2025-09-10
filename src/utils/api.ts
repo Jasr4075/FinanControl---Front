@@ -1,7 +1,6 @@
 // src/utils/api.ts
 import axios from "axios";
-import { getToken, getRefreshToken, saveToken, saveRefreshToken, saveUser, forceLogout } from "./auth";
-import { router } from "expo-router";
+import { getToken, getRefreshToken, saveToken, saveRefreshToken, saveUser, forceLogout } from "../features/auth/auth";
 
 const api = axios.create({
   baseURL: "https://financontrol-y8zd.onrender.com/api",

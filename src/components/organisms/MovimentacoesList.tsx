@@ -11,8 +11,10 @@ import api from "../../utils/api";
 import { MaterialIcons } from "@expo/vector-icons";
 import Card from "../atoms/Card";
 import Valor from "../atoms/Valor";
-import CustomAlert from "../atoms/Alert"; // ✅ importa o alerta customizado
-import { Movimentacao } from "../../types/types";
+import CustomAlert from "../atoms/Alert";
+import { Movimentacao } from "../../types/common";
+import MovimentacaoModal from "../molecules/MovimentacaoModal";
+
 
 const INITIAL_COUNT = 5;
 const ITEMS_PER_LOAD = 10;
@@ -133,99 +135,12 @@ export default function MovimentacoesList({
       )}
 
       {/* Modal de detalhes */}
-      <Modal
-        visible={!!selected}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setSelected(null)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>{selected?.descricao}</Text>
-            <Text style={styles.meta}>Tipo: {selected?.tipo}</Text>
-            <Text style={styles.meta}>
-              Valor: R$ {selected?.valor.toFixed(2)}
-            </Text>
-            <Text style={styles.meta}>
-              Data:{" "}
-              {selected?.data
-                ? new Date(selected.data).toLocaleDateString("pt-BR")
-                : ""}
-            </Text>
-            <Text style={styles.meta}>Método: {selected?.metodoPagamento}</Text>
-            <Text style={styles.meta}>
-              Conta: {selected?.conta?.bancoNome ?? "Sem conta"}
-            </Text>
-            <Text style={styles.meta}>
-              Categoria: {selected?.categoria?.name ?? "Sem categoria"}
-            </Text>
-            {selected?.cartao?.name && (
-              <Text style={styles.meta}>Cartão: {selected?.cartao?.name}</Text>
-            )}
 
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginTop: 18,
-              }}
-            >
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "#28a745",
-                  padding: 10,
-                  borderRadius: 8,
-                  flex: 1,
-                  marginRight: 8,
-                }}
-                onPress={() => setEditando(true)}
-              >
-                <Text
-                  style={{
-                    color: "#fff",
-                    textAlign: "center",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Editar
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "#dc3545",
-                  padding: 10,
-                  borderRadius: 8,
-                  flex: 1,
-                  marginLeft: 8,
-                }}
-                onPress={() => setShowAlert(true)} // ✅ abre o alerta customizado
-              >
-                <Text
-                  style={{
-                    color: "#fff",
-                    textAlign: "center",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Excluir
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity onPress={() => setSelected(null)}>
-              <Text
-                style={{
-                  color: "#007AFF",
-                  marginTop: 20,
-                  textAlign: "center",
-                }}
-              >
-                Fechar
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <MovimentacaoModal
+        movimentacao={selected}
+        onClose={() => setSelected(null)}
+        onChanged={onChanged}
+      />
 
       {/* ✅ Alerta customizado de confirmação */}
       <CustomAlert
@@ -268,18 +183,4 @@ const styles = StyleSheet.create({
   valueWrapper: { minWidth: 90, alignItems: "flex-end" },
   showMoreButton: { alignItems: "center", marginTop: 10, paddingVertical: 6 },
   showMoreText: { fontSize: 14, color: "#007AFF", fontWeight: "500" },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    width: "85%",
-    elevation: 4,
-  },
-  modalTitle: { fontSize: 18, fontWeight: "700", marginBottom: 10 },
 });

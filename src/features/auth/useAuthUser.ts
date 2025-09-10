@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
-import { clearAuth, getUser, validateToken } from "@/src/utils/auth";
+import { clearAuth, getUser, validateToken } from "@/src/features/auth/auth";
 import { useCallback, useEffect, useState } from "react";
-import { UseAuthUserReturn, AuthUser } from "../types/types";
+import { UseAuthUserReturn, AuthUser } from "../auth/types";
 
 export default function useAuthUser(): UseAuthUserReturn {
   const router = useRouter();

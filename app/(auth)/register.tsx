@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import useRedirectIfAuth from "@/src/hooks/useRedirectIfAuth";
+import useRedirectIfAuth from "@/src/features/auth/useRedirectIfAuth";
 
 export default function RegisterScreen() {
   const router = useRouter();
