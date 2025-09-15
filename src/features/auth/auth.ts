@@ -119,9 +119,11 @@ export async function clearAuth() {
 }
 
 export async function isAuthenticated(): Promise<boolean> {
-  // Consider authenticated only when token exists and appears valid
-  return validateToken();
+  const tokenValid = await validateToken();
+  const user = await getUser();
+  return !!(tokenValid && user);
 }
+
 
 function base64UrlDecode(input: string): string | null {
   try {

@@ -22,7 +22,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   // Novo estado para erro geral de autenticação
   const [error, setError] = useState<{ username?: string; senha?: string; auth?: string }>({});
-  const loadingAuth = useRedirectIfAuth();
+  const { loading: loadingAuth } = useRedirectIfAuth();
 
   async function handleLogin() {
     let newErrors: typeof error = {};
@@ -71,6 +71,16 @@ export default function LoginScreen() {
       setLoading(false);
     }
   }
+
+  if (loadingAuth) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text style={styles.loadingText}>Verificando sessão...</Text>
+      </View>
+    );
+  }
+  
 
   return (
     <View style={styles.container}>

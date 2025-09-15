@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { InteractionManager } from "react-native";
 import { useRouter } from "expo-router";
 import { isAuthenticated, validateToken, getUser, clearAuth } from "@/src/features/auth/auth";
 import { ValidRedirectPaths, UseRedirectIfAuthOptions } from "../auth/types";
@@ -29,15 +30,12 @@ export default function useRedirectIfAuth(options: UseRedirectIfAuthOptions = {}
 
         if (!isMounted) return;
 
-        if (authenticated && tokenValid && userData) {
+        if (authenticated && tokenValid) {
           if (onRedirect) onRedirect();
 
-          setTimeout(() => {
-            if (isMounted) {
-              // Agora o TS aceita porque redirectPath é do tipo ValidRedirectPaths
-              router.replace(redirectPath);
-            }
-          }, 100);
+          InteractionManager.runAfterInteractions(() => {
+            if (isMounted) router.replace(redirectPath);
+          });
         } else {
           if (onStay) onStay();
 
