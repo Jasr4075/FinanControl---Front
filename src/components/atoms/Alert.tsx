@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 interface CustomAlertProps {
@@ -6,7 +6,9 @@ interface CustomAlertProps {
   title: string;
   message: string;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void> | void;
+  loadingConfirm?: boolean;
+  disabledConfirm?: boolean;
 }
 
 const CustomAlert: React.FC<CustomAlertProps> = ({
@@ -15,7 +17,21 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   message,
   onCancel,
   onConfirm,
+  loadingConfirm = false,
+  disabledConfirm = false,
 }) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    if (loading || disabledConfirm) return;
+    setLoading(true);
+    try {
+      await onConfirm?.();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Modal
       visible={visible}
@@ -29,12 +45,16 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
           <Text style={styles.message}>{message}</Text>
 
           <View style={styles.buttons}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
+            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} disabled={loading}>
               <Text style={styles.cancelText}>Cancelar</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.confirmBtn} onPress={onConfirm}>
-              <Text style={styles.confirmText}>Ok</Text>
+            <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirm} disabled={loading || disabledConfirm || loadingConfirm}>
+              {loading || loadingConfirm ? (
+                <Text style={styles.confirmText}>Aguarde...</Text>
+              ) : (
+                <Text style={styles.confirmText}>Ok</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

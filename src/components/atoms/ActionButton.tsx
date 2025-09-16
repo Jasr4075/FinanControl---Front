@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { Link } from "expo-router";
 
 interface ActionButtonProps {
@@ -6,22 +6,25 @@ interface ActionButtonProps {
   label: string;
   color: string;
   onPress?: () => void;
+  loading?: boolean;
+  disabled?: boolean;
 }
 
-export default function ActionButton({ href, label, color, onPress }: ActionButtonProps) {
+export default function ActionButton({ href, label, color, onPress, loading = false, disabled = false }: ActionButtonProps) {
+  const isDisabled = disabled || loading;
   if (href) {
     return (
-      <TouchableOpacity style={[styles.button, { backgroundColor: color }]}> 
+      <TouchableOpacity style={[styles.button, { backgroundColor: color }]} disabled={isDisabled}> 
         <Link href={href} style={styles.text}>
-          {label}
+          {loading ? <ActivityIndicator color="#fff" /> : label}
         </Link>
       </TouchableOpacity>
     );
   }
 
   return (
-    <TouchableOpacity style={[styles.button, { backgroundColor: color }]} onPress={onPress}>
-      <Text style={styles.text}>{label}</Text>
+    <TouchableOpacity style={[styles.button, { backgroundColor: color }]} onPress={isDisabled ? undefined : onPress} disabled={isDisabled}>
+      {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.text}>{label}</Text>}
     </TouchableOpacity>
   );
 }

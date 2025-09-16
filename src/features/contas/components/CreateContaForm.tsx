@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { ActivityIndicator } from "react-native";
 import {
   View,
   Text,
@@ -73,6 +74,7 @@ export default function CreateContaForm({ onClose, onSuccess }: Props) {
   const [dueDay, setDueDay] = useState("");
   const [cashbackPercent, setCashbackPercent] = useState("");
   const [hasCashback, setHasCashback] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const bancosFiltrados = useMemo(() => {
     if (!bancoNome) return bancosPopulares;
@@ -82,6 +84,8 @@ export default function CreateContaForm({ onClose, onSuccess }: Props) {
   }, [bancoNome]);
 
   const handleCreate = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
       const user = await getUser();
 
@@ -127,7 +131,7 @@ export default function CreateContaForm({ onClose, onSuccess }: Props) {
             dueDay: parseInt(dueDay, 10),
           });
           cartaoCriadoId = "ok";
-          } catch (e) {
+        } catch (e) {
           let message = "Conta criada, mas falhou ao criar cartão.";
           if (e instanceof Error) message += `\n${e.message}`;
           alert.showAlert("Aviso", message);
@@ -144,9 +148,11 @@ export default function CreateContaForm({ onClose, onSuccess }: Props) {
       onSuccess?.();
       onClose();
     } catch (error) {
-  let message = "Não foi possível criar a conta.";
-  if (error instanceof Error) message += `\n${error.message}`;
-  alert.showAlert("Erro", message);
+      let message = "Não foi possível criar a conta.";
+      if (error instanceof Error) message += `\n${error.message}`;
+      alert.showAlert("Erro", message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -377,8 +383,8 @@ export default function CreateContaForm({ onClose, onSuccess }: Props) {
           </View>
         )}
 
-        <TouchableOpacity style={styles.buttonPrimary} onPress={handleCreate}>
-          <Text style={styles.buttonText}>Salvar</Text>
+        <TouchableOpacity style={styles.buttonPrimary} onPress={handleCreate} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Salvar</Text>}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.buttonSecondary} onPress={onClose}>
