@@ -1,7 +1,17 @@
 import { Link } from "expo-router";
-import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import useRedirectIfAuth from "@/src/features/auth/useRedirectIfAuth";
 
 export default function Index() {
+    const { loading: loadingAuth } = useRedirectIfAuth();
+    if (loadingAuth) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2563eb" />
+          <Text style={styles.loadingText}>Verificando sessão...</Text>
+        </View>
+      );
+    }
   return (
     <View style={styles.container}>
       {/* Futuro espaço para logo */}
@@ -39,12 +49,22 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: "#fdfdfd",
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
   title: {
     fontSize: 32,
     fontWeight: "bold",
     marginBottom: 10,
     color: "#1e1e1e",
     textAlign: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    color: "#666",
   },
   subtitle: {
     fontSize: 16,

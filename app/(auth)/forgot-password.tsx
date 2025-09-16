@@ -19,7 +19,16 @@ export default function ForgotPasswordScreen() {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const router = useRouter();
-  const loadingAuth = useRedirectIfAuth();
+  const { loading: loadingAuth } = useRedirectIfAuth();
+  
+  if (loadingAuth) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text style={styles.loadingText}>Verificando sessão...</Text>
+      </View>
+    );
+  }
 
   const showAlert = (title: string, message: string) => {
     setAlertTitle(title);
@@ -114,4 +123,14 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "#fff", fontWeight: "bold" },
   link: { color: "#2e78b7", marginTop: 20, textAlign: "center" },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  loadingText: {
+    marginTop: 16,
+    color: "#666",
+  },
 });

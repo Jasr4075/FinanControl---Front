@@ -24,7 +24,15 @@ export default function RegisterScreen() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Record<string, string>>({});
-  const loadingAuth = useRedirectIfAuth();
+      const { loading: loadingAuth } = useRedirectIfAuth();
+      if (loadingAuth) {
+        return (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#2563eb" />
+            <Text style={styles.loadingText}>Verificando sessão...</Text>
+          </View>
+        );
+      }
 
   // 🔹 Atualiza email e gera username automático
   const handleEmailChange = (value: string) => {
@@ -187,6 +195,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 24,
     backgroundColor: "#fff",
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  loadingText: {
+    marginTop: 16,
+    color: "#666",
   },
   title: {
     fontSize: 28,
