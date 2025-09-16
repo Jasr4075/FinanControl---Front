@@ -26,7 +26,6 @@ export default function CartoesRow({ refreshKey }: { refreshKey?: any } = {}) {
   const [expandido, setExpandido] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const screenW = Dimensions.get('window').width;
-  // per-card animated values (must be a hook and declared unconditionally)
   const anims = useRef<Record<string, Animated.Value>>({});
 
   useEffect(() => {
@@ -53,7 +52,7 @@ export default function CartoesRow({ refreshKey }: { refreshKey?: any } = {}) {
     return <Text style={{ textAlign: "center", color: "#666" }}>Nenhum cartão cadastrado</Text>;
   }
 
-  const cardsVisiveis = expandido ? cartoes : cartoes.slice(0, 1);
+  const cardsVisiveis = expandido ? cartoes : cartoes.slice(0, 2);
 
   function toggleCard(id: string) {
     setExpandedCards((s) => ({ ...s, [id]: !s[id] }));
@@ -112,7 +111,7 @@ export default function CartoesRow({ refreshKey }: { refreshKey?: any } = {}) {
           activeOpacity={0.8}
           onPress={() => setExpandido((e) => !e)}
         >
-          <Text style={styles.toggleText}>{expandido ? 'Mostrar menos' : `Ver todos os cartões (${cartoes.length})`}</Text>
+          <Text style={styles.toggleText}>{expandido ? 'Mostrar menos' : `Ver todos (${cartoes.length})`}</Text>
         </TouchableOpacity>
       )}
     </>

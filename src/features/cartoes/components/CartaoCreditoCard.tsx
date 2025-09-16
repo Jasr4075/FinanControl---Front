@@ -101,7 +101,7 @@ export default function CartaoCreditoCard({
     creditUsed: Number(d.creditUsed),
     available: Number(d.available),
     percentUsed: Number(d.percentUsed),
-    conta:{
+    conta: {
       ...d.conta,
       saldo: Number(d.conta?.saldo) || 0,
     }
@@ -190,105 +190,92 @@ export default function CartaoCreditoCard({
 
   return (
     <>
-<Card style={styles.card}>
-  {/* Badge con fatura atual */}
-  {resumo.type !== "DEBITO" && valorFaturaAtual != null && (
-    <View style={styles.smallBadge}>
-      <Text style={styles.smallBadgeText}>
-        {currency(valorFaturaAtual)}
-      </Text>
-    </View>
-  )}
+      <Card style={styles.card}>
+        {/* Badge con fatura atual */}
+        {resumo.type !== "DEBITO" && valorFaturaAtual != null && (
+          <View style={styles.smallBadge}>
+            <Text style={styles.smallBadgeText}>
+              {currency(valorFaturaAtual)}
+            </Text>
+          </View>
+        )}
 
-  {/* Cabecera */}
-  <View style={styles.header}>
-    <Text style={styles.title}>{resumo.nome}</Text>
-    {resumo.conta && (
-      <Text style={styles.sub}>
-        {resumo.conta.conta} - {resumo.conta.bancoNome}
-      </Text>
-    )}
-  </View>
-
-  {/* Tarjeta de crédito: progreso visual */}
-  {resumo.type !== "DEBITO" ? (
-    <View>
-      <View style={styles.progressOuter}>
-        <View
-          style={[
-            styles.progressInner,
-            {
-              flex: Math.min(100, resumo.percentUsed) / 100,
-              backgroundColor: colorPorPercent(resumo.percentUsed),
-            },
-          ]}
-        >
-          <Text style={styles.progressLabel}>{pct(resumo.percentUsed)}</Text>
-        </View>
-        <View
-          style={{ flex: 1 - Math.min(100, resumo.percentUsed) / 100 }}
-        />
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.disponivel}>
-          Disponível: {currency(resumo.available)}
-        </Text>
-        <Text style={styles.usado}>
-          Usado: {currency(resumo.creditUsed)}
-        </Text>
-      </View>
-
-      <View style={styles.thinProgressContainer}>
-        <View
-          style={[
-            styles.thinProgressFill,
-            {
-              width: `${Math.min(100, resumo.percentUsed)}%`,
-              backgroundColor: colorPorPercent(resumo.percentUsed),
-            },
-          ]}
-        />
-      </View>
-
-      <Text style={styles.limite}>
-        Limite: {currency(resumo.creditLimit)}
-      </Text>
-
-      <TouchableOpacity onPress={abrirModal} style={styles.detalhesBtn}>
-        <Text style={styles.detalhesText}>Ver fatura atual</Text>
-      </TouchableOpacity>
-
-      {showInlineDetails && (
-        <View style={styles.inlineBox}>
-          {loadingFatura && !detalhe ? (
-            <ActivityIndicator size="small" color="#4a90e2" />
-          ) : detalhe ? (
-            <>
-              <Text style={styles.inlineTitle}>
-                Fatura {detalhe.fatura.mes}/{detalhe.fatura.ano}
-              </Text>
-              <Text style={styles.inlineText}>
-                Total: {currency(Number(detalhe.fatura.valorTotal))}
-              </Text>
-              <Text style={styles.inlineText}>
-                Restante: {currency(detalhe.resumo.restante)}
-              </Text>
-            </>
-          ) : (
-            <Text style={styles.inlineText}>Nenhuma fatura</Text>
+        {/* Cabecera */}
+        <View style={styles.header}>
+          <Text style={styles.title}>{resumo.nome}</Text>
+          {resumo.conta && (
+            <Text style={styles.sub}>
+              {resumo.conta.conta} - {resumo.conta.bancoNome}
+            </Text>
           )}
         </View>
-      )}
-    </View>
-  ) : (
-    <View style={styles.infoRow}>
-      <Text style={styles.disponivel}>
-        Saldo: {currency(resumo.conta?.saldo ?? 0)}
-      </Text>
-    </View>
-  )}
-</Card>
+
+        {/* Tarjeta de crédito: progreso visual */}
+        {resumo.type !== "DEBITO" ? (
+          <View>
+            <View style={styles.progressOuter}>
+              <View
+                style={[
+                  styles.progressInner,
+                  {
+                    flex: Math.min(100, resumo.percentUsed) / 100,
+                    backgroundColor: colorPorPercent(resumo.percentUsed),
+                  },
+                ]}
+              >
+                <Text style={styles.progressLabel}>{pct(resumo.percentUsed)}</Text>
+              </View>
+              <View
+                style={{ flex: 1 - Math.min(100, resumo.percentUsed) / 100 }}
+              />
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.disponivel}>
+                Disponível: {currency(resumo.available)}
+              </Text>
+              <Text style={styles.usado}>
+                Usado: {currency(resumo.creditUsed)}
+              </Text>
+            </View>
+            <Text style={styles.limite}>
+              Limite Total: {currency(resumo.creditLimit)}
+            </Text>
+
+            <TouchableOpacity onPress={abrirModal} style={styles.detalhesBtn}>
+              <Text style={styles.detalhesText}>Ver fatura atual</Text>
+            </TouchableOpacity>
+
+            {showInlineDetails && (
+              <View style={styles.inlineBox}>
+                {loadingFatura && !detalhe ? (
+                  <ActivityIndicator size="small" color="#4a90e2" />
+                ) : detalhe ? (
+                  <>
+                    <Text style={styles.inlineTitle}>
+                      Fatura {detalhe.fatura.mes}/{detalhe.fatura.ano}
+                    </Text>
+                    <Text style={styles.inlineText}>
+                      Total: {currency(Number(detalhe.fatura.valorTotal))}
+                    </Text>
+                    <Text style={styles.inlineText}>
+                      Restante: {currency(detalhe.resumo.restante)}
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={styles.inlineText}>Nenhuma fatura</Text>
+                )}
+              </View>
+            )}
+          </View>
+        ) : (
+          <View style={styles.infoRow}>
+            <Text style={styles.disponivel}>
+              Saldo: {currency(resumo.conta?.saldo ?? 0)}
+            </Text>
+          </View>
+        )}
+      </Card>
 
 
       <FaturaModal
@@ -350,7 +337,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     flexWrap: "wrap",
   },
-  limite: { fontSize: 14, color: "#555" },
+  limite: { fontSize: 14, color: "#4a90e2" },
   usado: { fontSize: 14, color: "#ff6b6b" },
   disponivel: { fontSize: 14, color: "#4caf50" },
   detalhesBtn: {
