@@ -15,8 +15,8 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { CreateDespesaInput } from "../types";
-import {Conta} from "@/src/features/contas/types"
-import { Categoria } from "@/src/types/common"
+import { Conta } from "@/src/features/contas/types";
+import { Categoria } from "@/src/types/common";
 import Input from "../../../components/atoms/Input";
 import { useAlert } from "@/src/context/AlertContext";
 import { formatCurrency, parseCurrencyToNumber } from "../../../utils/formatCurrency";
@@ -67,31 +67,24 @@ export default function CreateDespesaForm({
   };
   
 
-  // usando alert global (useAlert)
-
-  // filtra só pelo search, já que categorias já é só DESPESA
+  // Filtra categorias e contas pelo texto de busca
   const categoriasFiltradas = categorias.filter((cat) =>
     cat.name.toLowerCase().includes(searchCategoria.toLowerCase())
   );
-
-  // filtra só pelo search
   const contasFiltradas = contas.filter((c) =>
     c.nome.toLowerCase().includes(searchConta.toLowerCase())
   );
-
-  // Verifica se a conta é efetivo
+  // Verifica se a conta selecionada é do tipo EFETIVO
   const contaSelecionadaObj = contas.find((c) => c.id === contaSelecionada);
   const isEfetivo =
     contaSelecionadaObj?.type === "EFETIVO" && contaSelecionadaObj?.efetivo;
 
-    useEffect(() => {
-      if (success) {
-          alert.showAlert("Sucesso!", "Despesa criada com sucesso!");
-          onSuccess?.();
-        }
-    }, [success, onSuccess]);
-    
-    
+  useEffect(() => {
+    if (success) {
+      alert.showAlert("Sucesso!", "Despesa criada com sucesso!");
+      onSuccess?.();
+    }
+  }, [success, onSuccess]);
 
   useEffect(() => {
     if (error) console.log("Erro", error.toString());
@@ -105,25 +98,24 @@ export default function CreateDespesaForm({
     }
   }, [isEfetivo]);
 
-  // Carregar categorias
+  // Carrega categorias de despesa
   useEffect(() => {
     async function fetchCategorias() {
       try {
         const res = await api.get("/categorias");
-        // filtra apenas DESPESA
         const despesas = res.data.data.filter(
           (cat: any) => cat.type === "DESPESA"
         );
         setCategorias(despesas);
       } catch (err) {
         console.error(err);
-  alert.showAlert("Erro", "Não foi possível carregar as categorias");
+        alert.showAlert("Erro", "Não foi possível carregar as categorias");
       }
     }
     fetchCategorias();
   }, []);
 
-  // Carregar contas do usuário
+  // Carrega contas do usuário
   useEffect(() => {
     async function fetchContas() {
       const user = await getUser();
@@ -142,13 +134,13 @@ export default function CreateDespesaForm({
           setContas(contasData);
         }
       } catch {
-  alert.showAlert("Erro", "Não foi possível carregar as contas");
+        alert.showAlert("Erro", "Não foi possível carregar as contas");
       }
     }
     fetchContas();
   }, []);
 
-  // Atualizar cartões quando a conta muda
+  // Atualiza cartões quando a conta muda
   useEffect(() => {
     const conta = contas.find((c) => c.id === contaSelecionada);
     if (conta?.cartoes) setCartoes(conta.cartoes);
@@ -156,12 +148,12 @@ export default function CreateDespesaForm({
     setCartaoSelecionado("");
   }, [contaSelecionada]);
 
-  // Submit
+  // Envia o formulário
   const handleSubmit = async () => {
     const user = await getUser();
     if (!user?.id) return alert.showAlert("Erro", "Usuário não encontrado!");
     if (!descricao || !valor || !contaSelecionada || !categoryId)
-      alert.showAlert("Atenção", "Preencha todos os campos obrigatórios!");
+      return alert.showAlert("Atenção", "Preencha todos os campos obrigatórios!");
 
     const isCredito = metodoPagamento === "CREDITO";
     const payload: CreateDespesaInput = {
@@ -182,7 +174,7 @@ export default function CreateDespesaForm({
     } catch (e) {
       let message = "Não foi possível criar a despesa. Tente novamente.";
       if (e instanceof Error) message += `\n${e.message}`;
-  alert.showAlert("Erro", message);
+      alert.showAlert("Erro", message);
     }
   };
 
@@ -193,7 +185,7 @@ export default function CreateDespesaForm({
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
-        {/* Header */}
+  {/* Título e botão de fechar */}
         <View
           style={{
             flexDirection: "row",
@@ -214,7 +206,7 @@ export default function CreateDespesaForm({
           )}
         </View>
 
-        {/* Conta */}
+  {/* Seleção de conta */}
         <Text style={styles.label}>Conta *</Text>
         <View style={styles.searchContainer}>
           <Feather
@@ -257,7 +249,7 @@ export default function CreateDespesaForm({
           ))}
         </ScrollView>
 
-        {/* Cartão */}
+  {/* Seleção de cartão (opcional) */}
         {cartoes.length > 0 && !isEfetivo && (
           <>
             <Text style={styles.label}>Cartão (opcional)</Text>
@@ -290,7 +282,7 @@ export default function CreateDespesaForm({
           </>
         )}
 
-        {/* Categoria */}
+  {/* Seleção de categoria */}
         <Text style={styles.label}>Categoria *</Text>
         <View style={styles.searchContainer}>
           <Feather
@@ -333,7 +325,7 @@ export default function CreateDespesaForm({
           ))}
         </ScrollView>
 
-        {/* Descrição */}
+  {/* Campo descrição */}
         <Text style={styles.label}>Descrição *</Text>
         <Input
           style={styles.input}
@@ -342,7 +334,7 @@ export default function CreateDespesaForm({
           onChangeText={setDescricao}
         />
 
-        {/* Valor */}
+  {/* Campo valor */}
         <Text style={styles.label}>Valor *</Text>
         <Input
           style={styles.input}
@@ -352,7 +344,7 @@ export default function CreateDespesaForm({
           onChangeText={handleChange}
         />
 
-        {/* Método de Pagamento */}
+  {/* Método de pagamento */}
         {!isEfetivo && (
           <>
             <Text style={styles.label}>Método de Pagamento *</Text>
@@ -388,7 +380,7 @@ export default function CreateDespesaForm({
           </>
         )}
 
-        {/* Parcelas */}
+  {/* Parcelas (apenas crédito) */}
         {metodoPagamento === "CREDITO" && (
           <>
             <Text style={styles.label}>Parcelas *</Text>
@@ -402,7 +394,7 @@ export default function CreateDespesaForm({
           </>
         )}
 
-        {/* Data */}
+  {/* Data da despesa */}
         <Text style={styles.label}>Data</Text>
         <TouchableOpacity
           style={styles.dateButton}
@@ -424,14 +416,14 @@ export default function CreateDespesaForm({
           />
         )}
 
-        {/* Submit */}
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}disabled={loading}>
+  {/* Botão de submit */}
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
           <Text style={styles.submitButtonText}>
-          {loading ? "Criando..." : "Criar Despesa"}
+          {loading ? "Só um poquinho..." : "Criar Despesa"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
-  {/* global CustomAlert provided by AlertProvider will handle alerts */}
+  {/* Alertas globais são tratados pelo AlertProvider */}
 
     </KeyboardAvoidingView>
   );

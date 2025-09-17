@@ -32,6 +32,122 @@ export default function ProfileScreen() {
   const [telefone, setTelefone] = useState(user?.telefone || "");
   const [username, setUsername] = useState(user?.username || "");
 
+  // Easter egg: mini game de memória
+  const [avatarClicks, setAvatarClicks] = useState(0);
+  const [showMemoryGame, setShowMemoryGame] = useState(false);
+
+  const handleAvatarPress = () => {
+    setAvatarClicks((prev) => {
+      if (prev + 1 === 2) {
+        setShowMemoryGame(true);
+        return 0;
+      }
+      return prev + 1;
+    });
+  };
+
+  const handleCloseMemoryGame = () => {
+    setShowMemoryGame(false);
+  };
+
+  // Mini game de memória melhorado
+  const MemoryGame = () => {
+    const baseCards = ["🍎", "🍌", "🍇", "🍊"];
+    const cards = [...baseCards, ...baseCards]; // pares
+
+    const shuffleArray = (arr: string[]) => [...arr].sort(() => Math.random() - 0.5);
+
+    const [shuffled, setShuffled] = useState<string[]>(shuffleArray(cards));
+    const [flipped, setFlipped] = useState<number[]>([]);
+    const [matched, setMatched] = useState<number[]>([]);
+    const [tries, setTries] = useState(0);
+    const [won, setWon] = useState(false);
+
+    const handleFlip = (idx: number) => {
+      if (flipped.length === 2 || flipped.includes(idx) || matched.includes(idx)) return;
+      setFlipped([...flipped, idx]);
+    };
+
+    React.useEffect(() => {
+      if (flipped.length === 2) {
+        setTries((t) => t + 1);
+        const [i1, i2] = flipped;
+        if (shuffled[i1] === shuffled[i2]) {
+          setMatched((m) => [...m, i1, i2]);
+        }
+        setTimeout(() => setFlipped([]), 700);
+      }
+    }, [flipped]);
+
+    React.useEffect(() => {
+      if (matched.length === shuffled.length && shuffled.length > 0) {
+        setWon(true);
+      }
+    }, [matched]);
+
+    const handleRestart = () => {
+      setShuffled(shuffleArray(cards));
+      setFlipped([]);
+      setMatched([]);
+      setTries(0);
+      setWon(false);
+    };
+
+    return (
+      <View style={styles.memoryGameOverlay}>
+        <View style={styles.memoryGameCard}>
+          <Text style={{ fontSize: 22, fontWeight: "700", marginBottom: 10 }}>
+            Jogo da Memória 🍀
+          </Text>
+
+          {/* Grid flexível */}
+          <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", marginBottom: 20 }}>
+            {shuffled.map((card, idx) => {
+              const isVisible = flipped.includes(idx) || matched.includes(idx);
+              return (
+                <TouchableOpacity
+                  key={idx}
+                  style={[
+                    styles.memoryCard,
+                    matched.includes(idx) && styles.memoryCardMatched,
+                  ]}
+                  onPress={() => handleFlip(idx)}
+                  disabled={isVisible}
+                >
+                  <Text style={{ fontSize: 32 }}>
+                    {isVisible ? card : "❓"}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text>Tentativas: {tries}</Text>
+          {won && (
+            <Text style={{ color: "#007AFF", fontWeight: "700", marginTop: 10 }}>
+              🎉 Parabéns! Você venceu em {tries} tentativas!
+            </Text>
+          )}
+
+          <View style={{ flexDirection: "row", marginTop: 18 }}>
+            <TouchableOpacity style={styles.memoryCloseBtn} onPress={handleCloseMemoryGame}>
+              <Text style={{ color: "#fff", fontWeight: "700" }}>Fechar</Text>
+            </TouchableOpacity>
+
+            {won && (
+              <TouchableOpacity
+                style={[styles.memoryCloseBtn, { marginLeft: 10, backgroundColor: "#4CAF50" }]}
+                onPress={handleRestart}
+              >
+                <Text style={{ color: "#fff", fontWeight: "700" }}>Jogar Novamente</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   const handleLogout = () => setShowAlert(true);
 
   const handleSaveProfile = async () => {
@@ -41,7 +157,6 @@ export default function ProfileScreen() {
     setLoadingSave(true);
     try {
       const payload: any = { nome, email, telefone, username };
-
       await api.put(`/usuarios/${user.id}`, payload);
       alert.showAlert("Sucesso", "Perfil atualizado");
       try {
@@ -58,7 +173,6 @@ export default function ProfileScreen() {
   };
 
   const handleCancel = () => {
-    // resetar valores ao original
     setNome(user?.nome || "");
     setEmail(user?.email || "");
     setTelefone(user?.telefone || "");
@@ -78,15 +192,17 @@ export default function ProfileScreen() {
           {/* Header */}
           <View style={styles.headerCard}>
             <View style={styles.avatarWrapper}>
-              <Image
-                source={{
-                  uri:
-                    "https://ui-avatars.com/api/?name=" +
-                    (user?.nome || "U") +
-                    "&background=007AFF&color=fff",
-                }}
-                style={styles.avatar}
-              />
+              <TouchableOpacity onPress={handleAvatarPress}>
+                <Image
+                  source={{
+                    uri:
+                      "https://ui-avatars.com/api/?name=" +
+                      (user?.nome || "U") +
+                      "&background=007AFF&color=fff",
+                  }}
+                  style={styles.avatar}
+                />
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.editAvatarBtn}
                 onPress={() =>
@@ -248,6 +364,9 @@ export default function ProfileScreen() {
             setShowAlert(false);
           }}
         />
+
+        {/* Easter Egg Game */}
+        {showMemoryGame && <MemoryGame />}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -335,10 +454,10 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginBottom: 30,
   },
-buttonRow: { 
-  flexDirection: "row", 
-  marginBottom: 15,
-},
+  buttonRow: { 
+    flexDirection: "row", 
+    marginBottom: 15,
+  },
   flex: { flex: 1 },
 
   primaryButton: { 
@@ -376,4 +495,46 @@ buttonRow: {
     borderRadius: 14,
   },
   logoutText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+
+  // Estilos do mini game
+  memoryGameOverlay: {
+    position: "absolute",
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.25)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 99,
+  },
+  memoryGameCard: {
+    backgroundColor: "#fff",
+    padding: 30,
+    borderRadius: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 10,
+    minWidth: 280,
+  },
+  memoryCard: {
+    width: 60, height: 60,
+    backgroundColor: "#F5F7F9",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    margin: 6,
+    borderWidth: 2,
+    borderColor: "#E5E5EA",
+  },
+  memoryCardMatched: {
+    backgroundColor: "#B2F7B2",
+    borderColor: "#4CAF50",
+  },
+  memoryCloseBtn: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+  },
 });

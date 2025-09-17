@@ -51,7 +51,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
 
             <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirm} disabled={loading || disabledConfirm || loadingConfirm}>
               {loading || loadingConfirm ? (
-                <Text style={styles.confirmText}>Aguarde...</Text>
+                <Text style={styles.confirmText}>Só um poquinho...</Text>
               ) : (
                 <Text style={styles.confirmText}>Ok</Text>
               )}

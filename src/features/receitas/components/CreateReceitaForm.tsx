@@ -270,7 +270,7 @@ export default function CreateReceitaForm({
 
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
           <Text style={styles.submitButtonText}>
-            {loading ? "Criando..." : "Criar Receita"}
+            {loading ? "Só um poquinho..." : "Criar Receita"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
