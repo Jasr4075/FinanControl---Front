@@ -103,7 +103,7 @@ export default function MovimentacoesList({
                 {item.metodoPagamento}
               </Text>
               <Text style={styles.date}>
-                {new Date(item.data).toLocaleDateString("pt-BR", {
+                {new Date(item.data + 'T00:00:00').toLocaleDateString("pt-BR", {
                   day: "2-digit",
                   month: "short",
                   year: "numeric",

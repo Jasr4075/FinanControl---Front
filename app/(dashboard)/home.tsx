@@ -87,7 +87,7 @@ export default function Home() {
             metodoPagamento: d.metodoPagamento ?? "Sem método",
             conta: d.conta ? { bancoNome: d.conta.bancoNome } : undefined,
             categoria: d.categoria ? { name: d.categoria.name } : undefined,
-            cartao: d.cartao ? { nome: d.cartao.nome } : undefined,
+            cartao: d.cartao ? { name: d.cartao.nome } : undefined,
           })
         );
 
@@ -97,14 +97,14 @@ export default function Home() {
             tipo: "Receita",
             descricao: r.descricao ?? r.description,
             valor: Number(r.valor ?? r.quantidade) || 0,
-            data: r.data,
+            data: r.data ?? r.date,
             conta: r.conta ? { bancoNome: r.conta.bancoNome } : undefined,
             categoria: r.categories ? { name: r.categories.name } : undefined,
           })
         );
 
         const todasMovimentacoes = [...receitasData, ...despesasData].sort(
-          (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
+          (a, b) => new Date(b.data + 'T00:00:00').getTime() - new Date(a.data + 'T00:00:00').getTime()
         );
         setMovimentacoes(todasMovimentacoes);
       } catch (err) {

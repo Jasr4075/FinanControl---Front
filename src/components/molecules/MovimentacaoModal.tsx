@@ -46,7 +46,7 @@ export default function MovimentacaoModal({
           <Text style={styles.meta}>Tipo: {movimentacao.tipo}</Text>
           <Text style={styles.meta}>Valor: R$ {movimentacao.valor.toFixed(2)}</Text>
           <Text style={styles.meta}>
-            Data: {movimentacao.data ? new Date(movimentacao.data).toLocaleDateString("pt-BR") : ""}
+            Data: {movimentacao.data ? new Date(movimentacao.data + 'T00:00:00').toLocaleDateString("pt-BR") : ""}
           </Text>
           <Text style={styles.meta}>Método: {movimentacao.metodoPagamento}</Text>
           <Text style={styles.meta}>
