@@ -487,9 +487,3 @@ eas build --profile production --platform all
 - **Prettier**: Formatação automática
 - **Atomic Design**: Estrutura de componentes
 - **Conventional Commits**: Padrão para mensagens
-
----
-
-**Desenvolvido com ❤️ usando React Native, Expo e TypeScript**
-
-**Licença**: MIT - Consulte LICENSE.md para detalhes
